@@ -1,0 +1,24 @@
+# R
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rcheck/
+*.tar.gz
+src/*.o
+src/*.so
+src/*.dll
+
+# analysis outputs — regenerate with the scripts in analysis/
+analysis/out/
+*.rds
+
+# manuscript build products
+manuscript/*.pdf
+manuscript/page-*.jpg
+manuscript/node_modules/
+
+# editors / OS
+.DS_Store
+.vscode/
+*.swp

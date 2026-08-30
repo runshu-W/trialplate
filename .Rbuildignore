@@ -1,0 +1,8 @@
+^analysis$
+^figures$
+^manuscript$
+^\.github$
+^CITATION\.cff$
+^\.gitignore$
+^.*\.Rproj$
+^\.Rproj\.user$
