@@ -38,6 +38,17 @@ test_that("efficiency axiom holds exactly for all three outcomes", {
   }
 })
 
+## Efficiency is a property of exact enumeration, not of the scale. An earlier
+## version of this work claimed the hazard-ratio scale satisfied it only
+## approximately; that was wrong, and this assertion exists so the claim cannot
+## come back. The scale determines WHICH aggregate is decomposed -- a log of a
+## ratio versus a difference of ratios -- not whether the axiom holds.
+test_that("efficiency holds on the raw hazard-ratio scale too, not only the log scale", {
+  Vh <- fit$V; Vh[, 1] <- exp(fit$V[, 1])
+  phi <- tp_shapley(Vh, fit$p, 1L)
+  expect_equal(sum(phi), unname(Vh[nrow(Vh), 1] - Vh[1, 1]), tolerance = 1e-10)
+})
+
 test_that("interaction matrices are symmetric with a zero diagonal", {
   for (o in names(OUTCOMES)) {
     I <- fit[[paste0("I_", o)]]
@@ -145,7 +156,34 @@ test_that("leverage predicts the planted interaction in the simulation", {
   expect_true(abs(I[1,2]) > 10 * median(abs(I[upper.tri(I)][-1])))
 })
 
-test_that("real protocol criteria have low leverage - the null interaction is structural", {
+test_that("real protocol criteria carry little leverage, so any interaction is heavily attenuated", {
   L <- tp_leverage(prep); up <- upper.tri(L)
-  expect_true(max(L[up]) < 0.15)      # permissive criteria cannot show much interaction
+  expect_true(max(L[up]) < 0.15)      # permissive criteria attenuate the contrast
+})
+
+## Low leverage is ATTENUATION by a known factor; only an exactly zero factor --
+## logical implication -- makes a cell structurally unidentifiable. These two
+## assertions keep that distinction honest.
+test_that("leverage is exactly the independence factor when criteria are independent", {
+  q <- c(0.45, 0.70, 0.85, 0.90)
+  and <- 1 - (q*q)/q - (q*q)/q + q*q          # p_ij = p_i p_j
+  expect_equal(and, (1 - q)^2, tolerance = 1e-12)
+})
+
+test_that("a logically implied pair has exactly zero contrast, unlike a merely permissive one", {
+  pn <- tp_prepare(colon_data(), colon_criteria_nested, "trt","time","status", colon_ps, tau = 1825)
+  im <- tp_implications(pn)
+  expect_true(any(im$determined))
+  L <- tp_leverage(prep)
+  expect_true(all(abs(L[upper.tri(L)]) > 1e-8))   # attenuated but never exactly zero
+})
+
+## Leverage is signed. Under positively correlated criteria the joint rate
+## exceeds the product of the marginals and the factor can turn negative, which
+## means the contrast flips sign rather than vanishing. Magnitude is what
+## measures attenuation, so |L| is the quantity to report.
+test_that("leverage can be negative when criteria are positively correlated", {
+  L <- tp_leverage(prep); v <- L[upper.tri(L)]
+  expect_true(any(v < 0))
+  expect_true(max(abs(v)) < 0.15)
 })

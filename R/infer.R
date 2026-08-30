@@ -236,7 +236,15 @@ tp_split_eval <- function(prep, fit, R = 400L, frac = 0.5, cores = 2L, seed = 20
 ## value on the log hazard ratio is negative, relax the rest. That rule is
 ## tested here the way it would have to be used - fitted on one split, scored on
 ## the other - against the original full protocol.
-tp_rule_eval <- function(prep, R = 400L, frac = 0.5, cores = 2L, seed = 20260829) {
+## `scale` selects the value function the RULE acts on. The published repo states
+## the rule as "Shapley value less than 0" and reports hazard ratios, without
+## saying which scale the decomposition runs on. We default to "log" because the
+## Shapley axioms presuppose additivity and the log is the additive scale of a
+## ratio; scale = "hr" reproduces the ratio-scale reading so the two can be
+## compared directly.
+tp_rule_eval <- function(prep, R = 400L, frac = 0.5, cores = 2L, seed = 20260829,
+                         scale = c("log", "hr")) {
+  scale <- match.arg(scale)
   p <- prep$p; bits <- bitwShiftL(1L, 0:(p - 1)); full <- seq_len(p)
   set.seed(seed + 6L); nn <- nrow(prep$E)
   idx <- lapply(seq_len(R), function(i) sample.int(nn, floor(frac * nn)))
@@ -244,9 +252,10 @@ tp_rule_eval <- function(prep, R = 400L, frac = 0.5, cores = 2L, seed = 20260829
     Ptr <- .reindex(prep, tr); Pte <- .reindex(prep, setdiff(seq_len(nn), tr))
     Vtr <- tp_enumerate(Ptr)
     if (any(Vtr[, "feasible"] == 0)) return(rep(NA_real_, 8))
-    phiHR <- tp_shapley(Vtr, p, 1L)
+    Vsel <- Vtr; if (scale == "hr") Vsel[, 1] <- exp(Vtr[, 1])
+    phiHR <- tp_shapley(Vsel, p, 1L)
     keepHR <- which(phiHR < 0)                     # Trial Pathfinder's rule
-    phiRM  <- tp_shapley(Vtr, p, 2L)
+    phiRM  <- tp_shapley(Vsel, p, 2L)
     keepRM <- which(phiRM > 0)                     # the same rule on absolute benefit
     ev <- function(S) tp_value(Pte, S)
     o <- ev(full); a <- ev(keepHR); b <- ev(keepRM)

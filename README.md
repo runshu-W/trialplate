@@ -72,6 +72,10 @@ vignettes/    a worked example
 analysis/     the scripts behind the paper — not part of the package
 figures/      the figures those scripts produce
 manuscript/   the manuscript and the docx-js script that builds it
+              (refs.js holds the reference list; the build fails if any listed
+              reference is never cited in the text)
+explainer/    a three-page plain-language account, in Chinese
+response/     point-by-point response to the reviewer, and the supplement
 ```
 
 ### Reproducing the analyses

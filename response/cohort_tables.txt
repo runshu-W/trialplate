@@ -1,0 +1,92 @@
+
+================ colon: adjuvant colon-cancer trial, Lev+5FU vs observation  (n = 619, treated 304, events 291) ================
+code    definition                     eligible  missing  evt kept trt kept ctl kept
+AGE75   age <= 75                         0.937    0.000       275      287      293
+AGE40   age >= 40                         0.918    0.000       266      278      290
+NOOBS   no obstruction                    0.811    0.000       231      250      252
+NOPRF   no perforation                    0.973    0.000       282      296      306
+NOADH   not adherent                      0.861    0.000       242      265      268
+DIFF12  differentiation <= 2              0.825    0.021       230      250      263
+EXT13   extent <= 3                       0.950    0.000       272      293      295
+SURG0   short interval since surgery      0.730    0.000       201      228      224
+NOD4    < 4 positive nodes                0.732    0.000       177      225      228
+
+FULL protocol: retains 176 (28.4%), events 56, treated 89, control 87
+
+pairwise correlation of the eligibility indicators (phi):
+         AGE75 AGE40 NOOBS NOPRF NOADHDIFF12 EXT13 SURG0  NOD4
+AGE75     1.00 -0.08 -0.02 -0.04 -0.01  0.01 -0.03 -0.02 -0.05
+AGE40    -0.08  1.00  0.13 -0.01  0.02  0.00  0.04  0.00  0.11
+NOOBS    -0.02  0.13  1.00  0.07  0.04  0.02 -0.05  0.01  0.02
+NOPRF    -0.04 -0.01  0.07  1.00  0.22  0.03  0.10  0.03 -0.06
+NOADH    -0.01  0.02  0.04  0.22  1.00  0.07  0.25 -0.01  0.01
+DIFF12    0.01  0.00  0.02  0.03  0.07  1.00  0.03  0.06  0.18
+EXT13    -0.03  0.04 -0.05  0.10  0.25  0.03  1.00 -0.06 -0.01
+SURG0    -0.02  0.00  0.01  0.03 -0.01  0.06 -0.06  1.00 -0.04
+NOD4     -0.05  0.11  0.02 -0.06  0.01  0.18 -0.01 -0.04  1.00
+max |off-diagonal correlation| = 0.250
+
+propensity model: main-effects logistic, no interactions or splines
+  covariates: age, sex, nodes_i, differ_i, extent, surg, obstruct, perfor, adhere
+  weights: unstabilised IPTW, e truncated to [0.05, 0.95]
+covariate      SMD before    SMD after   note
+age                 0.173       -0.003
+sex                -0.163        0.006
+nodes_i            -0.173       -0.003
+differ_i           -0.029        0.011
+extent             -0.067        0.007
+surg                    -            -   constant inside the full protocol by construction
+obstruct                -            -   constant inside the full protocol by construction
+perfor                  -            -   constant inside the full protocol by construction
+adhere                  -            -   constant inside the full protocol by construction
+  max |SMD| after weighting = 0.011  (0 of 5 non-degenerate above 0.10)
+  4 covariate(s) are fixed by the criteria themselves and carry no balance information here: surg, obstruct, perfor, adhere
+  propensity range: [0.275, 0.678]; 0 truncated at 0.05/0.95
+  overlap: treated PS [0.373, 0.658], control PS [0.275, 0.678]
+  n = 176, effective sample size after weighting = 172 (98%)
+  weight range [1.38, 3.10], max/mean = 1.55
+
+================ Rotterdam: breast-cancer registry, chemotherapy vs none  (n = 2982, treated 580, events 1272) ================
+code    definition                     eligible  missing  evt kept trt kept ctl kept
+AGE70   age <= 70                         0.861    0.000      1017      578     1990
+AGE30   age >= 30                         0.989    0.000      1257      569     2381
+ND9     nodes <= 9                        0.910    0.000      1069      508     2207
+NDPOS   nodes >= 1                        0.518    0.000       877      580      966
+SZ50    tumour size <= 50 mm              0.898    0.000      1060      502     2176
+ERP     ER >= 10                          0.764    0.000       949      443     1835
+PGRP    PgR >= 10                         0.681    0.000       823      428     1603
+YR85    enrolled >= 1985                  0.873    0.000      1022      502     2101
+YR90    enrolled <= 1990                  0.758    0.000      1068      427     1832
+
+FULL protocol: retains 419 (14.1%), events 191, treated 203, control 216
+
+pairwise correlation of the eligibility indicators (phi):
+         AGE70 AGE30   ND9 NDPOS  SZ50   ERP  PGRP  YR85  YR90
+AGE70     1.00 -0.04  0.04 -0.06  0.13 -0.07 -0.04  0.08 -0.02
+AGE30    -0.04  1.00 -0.01  0.02  0.01  0.03  0.05 -0.03  0.01
+ND9       0.04 -0.01  1.00 -0.30  0.25  0.01  0.03  0.00  0.02
+NDPOS    -0.06  0.02 -0.30  1.00 -0.23  0.03  0.02 -0.08  0.05
+SZ50      0.13  0.01  0.25 -0.23  1.00  0.02  0.04  0.05  0.02
+ERP      -0.07  0.03  0.01  0.03  0.02  1.00  0.57  0.02  0.06
+PGRP     -0.04  0.05  0.03  0.02  0.04  0.57  1.00 -0.00  0.10
+YR85      0.08 -0.03  0.00 -0.08  0.05  0.02 -0.00  1.00 -0.22
+YR90     -0.02  0.01  0.02  0.05  0.02  0.06  0.10 -0.22  1.00
+max |off-diagonal correlation| = 0.572
+
+propensity model: main-effects logistic, no interactions or splines
+  covariates: age, meno, size_n, grade, nodes, pgr, er, year
+  weights: unstabilised IPTW, e truncated to [0.05, 0.95]
+covariate      SMD before    SMD after   note
+age                -1.780       -0.251
+meno               -1.735       -0.247
+size_n             -0.154       -0.134
+grade              -0.053        0.075
+nodes              -0.606       -0.147
+pgr                 0.179        0.016
+er                 -0.463       -0.160
+year               -0.107       -0.213
+  max |SMD| after weighting = 0.251  (6 of 8 non-degenerate above 0.10)
+  propensity range: [0.050, 0.950]; 132 truncated at 0.05/0.95
+  overlap: treated PS [0.050, 0.950], control PS [0.050, 0.950]
+  n = 419, effective sample size after weighting = 155 (37%)
+  weight range [1.05, 20.00], max/mean = 10.83

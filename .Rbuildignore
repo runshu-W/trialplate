@@ -6,3 +6,5 @@
 ^\.gitignore$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^explainer$
+^response$
