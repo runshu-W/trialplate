@@ -1,0 +1,27 @@
+Package: trialplate
+Type: Package
+Title: Sample-Size Diagnostics for Data-Driven Trial Eligibility Criteria
+Version: 0.1.0
+Authors@R: person("Runshu", "Wang", email = "runshu.wang@gmail.com", role = c("aut", "cre"))
+Description: Tools for evaluating rules that relax clinical-trial eligibility
+    criteria from data. Shapley main effects and pairwise interaction indices for
+    eligibility criteria are computed by exact enumeration on two benefit
+    estimands in parallel, the log hazard ratio and the difference in restricted
+    mean survival time, because the hazard ratio is non-collapsible and the two
+    can disagree. The package supplies the diagnostics that such analyses need
+    before they are trusted: a closed-form interaction leverage that says whether
+    a criterion pair can exhibit an interaction at all, a logical-implication
+    detector for criteria that make their interaction cell an arithmetic
+    identity, and out-of-sample evaluation of a selection rule against the
+    protocol it replaces. Estimation kernels are written for the one-binary-
+    covariate weighted Cox and weighted Kaplan-Meier problems that dominate the
+    2^p enumeration, and agree with 'survival' to near machine precision.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 4.0)
+Imports: survival, stats, grDevices, graphics, parallel
+Suggests: testthat (>= 3.0.0), future, future.apply, knitr, rmarkdown
+VignetteBuilder: knitr
+RoxygenNote: 7.3.1
+URL: https://github.com/USER/trialplate
+BugReports: https://github.com/USER/trialplate/issues

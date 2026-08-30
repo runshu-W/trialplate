@@ -1,0 +1,81 @@
+---
+title: "Checking a data-driven eligibility rule before you trust it"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Checking a data-driven eligibility rule before you trust it}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+A rule that relaxes trial eligibility criteria from data promises two things:
+more eligible patients, and no loss (indeed a gain) in the treatment-effect
+estimate. The two promises need different amounts of data, and only one of them
+is cheap to keep. This vignette walks through checking both.
+
+## Set up a cohort
+
+```{r}
+library(trialplate)
+prep <- tp_prepare(colon_data(), colon_criteria, "trt", "time", "status",
+                   colon_ps, tau = 1825)
+fit  <- tp_fit(prep)
+round(data.frame(criterion = fit$names,
+                 dHR_pct = 100 * (exp(fit$phi_HR) - 1),
+                 dRMST_days = fit$phi_RMST,
+                 cost_pct = 100 * (1 - exp(fit$phi_N))), 1)
+```
+
+Two benefit estimands are reported side by side. The hazard ratio is
+non-collapsible, so restricting a cohort moves it even when every stratum's
+treatment effect is identical; the RMST difference does not have that problem.
+Where the two disagree about a criterion, the disagreement is real and has to be
+resolved on substantive grounds, not by picking whichever is more convenient.
+
+## Before reading any interaction, check whether one could exist
+
+```{r}
+L <- tp_leverage(prep)
+c(median = median(L[upper.tri(L)]), max = max(L[upper.tri(L)]))
+```
+
+Leverage is computed from eligibility rates alone, before any outcome is touched.
+Real protocol criteria are permissive, which drives it towards zero: here no pair
+exceeds 0.10. A null interaction in such a matrix is structural, not empirical.
+Do not read it as evidence that no effect modification exists.
+
+```{r}
+tp_implications(prep)$pairs   # NULL: no criterion implies another
+```
+
+## Test the rule out of sample
+
+```{r, eval = FALSE}
+M <- tp_rule_eval(prep, R = 500, cores = 2)
+g <- function(k) M[, grep(k, colnames(M), fixed = TRUE)[1]]
+c(more_patients = mean(g("n_hr")  - g("n_full")  > 0),
+  lower_hazard  = mean(g("hr_hr") - g("hr_full") < 0))
+#> more_patients  lower_hazard
+#>         0.982         0.270
+```
+
+The rule is fitted on one half and scored on the other, so neither protocol had
+a hand in choosing itself. The patient-count promise holds. The hazard-ratio
+promise does not — but that is a statement about this cohort's size, not about
+the rule. With 309 patients to learn from, the simulated threshold curve puts
+the expected value at 0.279; the observed 0.270 is exactly where it should be.
+
+At roughly 3,000 fitting patients the hazard-ratio promise reaches 0.80, and at
+5,167 it reaches 0.94. Confounded assignment, even when correctly adjusted for,
+pushes those requirements up by about a factor of two.
+
+## What not to conclude from success
+
+If the effect looks large on your own real-world data, that is not reassurance.
+In simulation, omitting one confounder from the propensity model made the
+procedure appear as reliable as a randomised design while inflating the hazard
+ratio gap it was detecting by 32 percent. Compare the gap under richer and
+poorer adjustment: it should *shrink* as adjustment improves.
