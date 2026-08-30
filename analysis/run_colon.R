@@ -1,0 +1,8 @@
+source("analysis/_setup.R")
+prep <- tp_prepare(colon_data(), colon_criteria, "trt","time","status", colon_ps, tau = 1825)
+fit  <- tp_fit(prep); saveRDS(fit, "analysis/out/c_fit.rds"); say("fit done")
+jack <- tp_jack(prep, K = 50L, cores = 2L); saveRDS(jack, "analysis/out/c_jack.rds"); say("jack done", length(jack))
+boot <- tp_boot(prep, B = 2000L, cores = 2L); saveRDS(boot, "analysis/out/c_boot.rds"); say("boot done", length(boot))
+sm   <- tp_summarise(fit, boot, jack); saveRDS(sm, "analysis/out/c_sm.rds"); say("summarise done")
+perm <- tp_perm(prep, fit, P = 500L, cores = 2L); saveRDS(perm, "analysis/out/c_perm.rds"); say("perm done")
+saveRDS(list(fit=fit, sm=sm, perm=perm), "analysis/out/colon_full.rds"); say("ALL DONE")

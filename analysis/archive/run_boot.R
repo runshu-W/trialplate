@@ -1,0 +1,7 @@
+source("/home/claude/trialplate/R/core.R"); source("/home/claude/trialplate/R/boot.R")
+source("/home/claude/trialplate/demo/criteria_def.R")
+fit  <- readRDS("/home/claude/trialplate/out/colon_fit.rds")
+reps <- trialplate_boot(d, criteria, "trt","time","status", ps_covars, B = 200, cores = 2)
+sm   <- summarise_boot(fit, reps)
+saveRDS(list(fit=fit, sm=sm, nrep=length(reps)), "/home/claude/trialplate/out/colon_boot.rds")
+cat("bootstrap reps kept:", length(reps), "\n")
