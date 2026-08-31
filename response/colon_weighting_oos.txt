@@ -1,0 +1,10 @@
+colon is randomised: out-of-sample performance under three weightings (300 splits)
+
+weighting                               P(lower HR)       P(more eligible)    mean HR criteria kept
+estimated propensity           0.250 [0.203, 0.300]   0.990 [0.977, 1.000]     0.6800     5.43
+known randomisation prob       0.260 [0.213, 0.310]   0.997 [0.990, 1.000]     0.6955     5.13
+unweighted                     0.267 [0.220, 0.320]   0.997 [0.990, 1.000]     0.6959     5.11
+
+Intervals are across splits and so are narrower than the patient-level
+uncertainty reported elsewhere; they are shown to compare the three schemes
+with each other, not to quantify population uncertainty.

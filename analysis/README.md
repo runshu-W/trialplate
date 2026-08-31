@@ -56,6 +56,20 @@ split the resampled ROWS, so duplicate copies of one patient could fall on oppos
 sides of the inner split. It now splits unique patient identifiers and asserts that
 the halves share none. Correcting the leak narrowed the intervals.
 
+### Added in the third revision
+
+| script | what it answers | reviewer point |
+|---|---|---|
+| `nested_all.R` | one nested resample carrying every out-of-sample quantity, so the matched and frontier statistics get patient-level uncertainty; four matching tolerances; margin-based dominance | R3 major 2, 3 |
+| `frontier_optimism.R` | how optimistic the empirical held-out frontier is, against a known population | R3 major 1 |
+| `rmst_rule.R` | a rule selecting on the RMST Shapley value instead of the log hazard ratio | R3 major 7 |
+| `conc_targets.R` | are the arrangements comparable? full-protocol HR, oracle HR, gap, eligible fraction | R3 major 6 |
+| `snr_check.R` | is a criterion-specific signal-to-noise ratio the better governing quantity? | R3 major 5 |
+| `colon_weighting_oos.R` | the three weighting schemes carried through the full out-of-sample evaluation | R3 minor 1 |
+
+`split_dependence.R` is superseded by `nested_all.R`, which carries the same two
+promises plus everything else through one loop.
+
 Two claims from the first version did not survive review and are corrected in the
 code as well as the text. Shapley efficiency is exact on the hazard-ratio scale as
 well as the log scale — the package now asserts both — and low interaction leverage

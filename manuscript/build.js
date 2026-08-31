@@ -10,7 +10,7 @@ const DECL = [
  ["Competing interests","To be completed by the authors."],
  ["Funding","To be completed by the authors."],
  ["Authors' contributions","To be completed by the authors."],
- ["Acknowledgements","We thank the reviewers, whose comments identified two errors in an earlier version and led to the analyses in sections 1 and 3 of the Results."],
+ ["Acknowledgements","We thank the reviewers, whose comments motivated additional analyses and corrections throughout, including the frontier-optimism simulation and the nested resampling reported here."],
 ];
 DECL.forEach(([h, t]) => M.add(M.P([M.R(h + ". ", {b:true}), M.R(t)], {after:110, size:20})));
 M.add(M.refList());

@@ -1,0 +1,12 @@
+Signal-to-noise of the most diluting criterion (n_fit = 6000, 60 replicates)
+
+arrangement     max gamma population phi    SD(phi)      SNR   observed P
+A_dil1_enr1          0.30       0.0234     0.0169     1.39         0.58
+B_dil1_enr2          0.30       0.0236     0.0156     1.51         0.79
+C_dil1_enr4          0.30       0.0238     0.0138     1.73         0.78
+D_dil2_enr1          0.15       0.0110     0.0144     0.76         0.19
+
+Spearman correlation with observed success:  raw coefficient 0.77 | SNR 0.80
+
+Four arrangements is far too few to establish a governing quantity. This is
+reported as a direction for the reviewer's suggestion, not as evidence for it.

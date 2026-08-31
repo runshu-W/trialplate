@@ -1,0 +1,15 @@
+Winner's curse in the held-out frontier (160 replicates, half size 310)
+
+  subsets dominating the rule, judged on a held-out half : median 72
+  subsets dominating the rule, judged at the population  : median 31
+  rule on the EMPIRICAL held-out frontier                : 0.056 [0.025, 0.094]
+  rule on the POPULATION frontier                        : 0.106 [0.062, 0.156]
+
+  of the subsets that dominate on half A:
+    still dominate on an independent half B              : 0.376 [0.324, 0.431]
+    genuinely dominate at the population                 : 0.195 [0.162, 0.230]
+
+  The empirical frontier is an argmax over 512 noisy estimates, so it sits
+  below the population frontier and the count of dominating subsets is
+  inflated. The ratio of the two medians is the optimism factor a reader
+  should apply when reading the corresponding numbers in the two cohorts.

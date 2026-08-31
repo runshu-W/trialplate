@@ -154,6 +154,52 @@ if (!is.null(cv)) {
     se_null    = sqrt(m(cv$cov_bca_null)*(1-m(cv$cov_bca_null))/n2))
 }
 
+## ---- round-3 additions ---------------------------------------------------
+nst <- function(lab) {
+  z <- rd(sprintf("analysis/out/nested_%s.rds", lab)); if (is.null(z)) return(NULL)
+  M <- z$M; point <- M[1, ]; boot <- M[-1, , drop = FALSE]
+  g <- function(nm) { if (!(nm %in% colnames(boot))) return(NULL)
+    x <- boot[, nm]; x <- x[is.finite(x)]
+    vt <- stats::var(x); ph <- mean(x); vm <- ph*(1-ph)/z$R_IN
+    list(point = unname(point[nm]), sd_total = sqrt(vt), sd_mc = sqrt(vm),
+         sd_outer = sqrt(max(vt - vm, 0)), ci = unname(stats::quantile(x, c(.025,.975)))) }
+  out <- list(B = z$B_OUT, R = z$R_IN, bands = z$BANDS, margin = z$MARGIN,
+              more = g("more"), lower = g("lower"),
+              front_hr = g("front_hr"), front_rm = g("front_rm"), front_hrM = g("front_hrM"),
+              n_dom = unname(point["n_dom"]), n_domM = unname(point["n_domM"]))
+  for (b in z$BANDS) { out[[paste0("hr", b)]] <- g(paste0("rank_hr_", b))
+                       out[[paste0("rm", b)]] <- g(paste0("rank_rm_", b))
+                       out[[paste0("nm", b)]] <- unname(point[paste0("nmatch_", b)])
+                       out[[paste0("sk", b)]] <- unname(point[paste0("skew_", b)]) }
+  out
+}
+J$nested <- list(colon = nst("colon"), rott = nst("rott"))
+
+fo <- rd("analysis/out/frontier_optimism.rds")
+if (!is.null(fo)) { m <- function(x) mean(x[is.finite(x)])
+  J$frontier_opt <- list(R = nrow(fo),
+    dom_emp = median(fo[,"n_domA"]), dom_pop = median(fo[,"n_domP"]),
+    front_emp = m(fo[,"front_emp"]), front_pop = m(fo[,"front_pop"]),
+    repro = m(fo[,"repro_B"]), true_frac = m(fo[,"true_frac"])) }
+
+rr <- rd("analysis/out/rmst_rule.rds")
+if (!is.null(rr)) J$rmst_rule <- lapply(rr, function(M) { m <- function(x) mean(x[is.finite(x)])
+  list(same = m(M[,"same_set"]), n_full = m(M[,"n_full"]), n_hr = m(M[,"n_hr"]), n_rm = m(M[,"n_rm"]),
+       hr_lowerHR = m(M[,"hrrule_lowerHR"]), hr_moreRM = m(M[,"hrrule_moreRM"]),
+       rm_lowerHR = m(M[,"rmrule_lowerHR"]), rm_moreRM = m(M[,"rmrule_moreRM"]),
+       hrHR = m(M[,"hr_of_hrrule"]), rmHR = m(M[,"hr_of_rmrule"]), fullHR = m(M[,"hr_full"]),
+       hrRM = m(M[,"rm_of_hrrule"]), rmRM = m(M[,"rm_of_rmrule"]), fullRM = m(M[,"rm_full"])) })
+
+sn <- rd("analysis/out/snr_check.rds")
+if (!is.null(sn)) J$snr <- as.data.frame(sn)
+
+cw <- rd("analysis/out/colon_weighting_oos.rds")
+if (!is.null(cw)) { m <- function(x) mean(x[is.finite(x)])
+  J$colon_wt <- setNames(lapply(c("ps","known","none"), function(s) list(
+    lower = m(cw[, paste0(s,"_lower")]), more = m(cw[, paste0(s,"_more")]),
+    hr = m(cw[, paste0(s,"_hr")]), nkeep = m(cw[, paste0(s,"_nkeep")]))),
+    c("ps","known","none")) }
+
 ## ---- static facts computed here -----------------------------------------
 J$efficiency <- local({
   pr <- tp_prepare(colon_data(), colon_criteria, "trt","time","status", colon_ps, tau=1825)

@@ -4,6 +4,7 @@ const {Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, Table,
 const fs = require('fs');
 const NUM = JSON.parse(fs.readFileSync("/home/claude/repo/analysis/out/numbers.json","utf8"));
 const FA = NUM.factorial || {}, CN = NUM.concentration || {}, PA = NUM.pareto || {}, FX = (NUM.fixedn||{}).cells || {};
+const NS = NUM.nested || {}, FO = NUM.frontier_opt || null, RR = NUM.rmst_rule || null, SNR = NUM.snr || null, CW = NUM.colon_wt || null;
 const f = (x,k=3) => (x===null||x===undefined||Number.isNaN(x)) ? "—" : Number(x).toFixed(k);
 const f0 = x => f(x,0);
 const W = 9360;
@@ -142,17 +143,49 @@ add(table(["reliability target","threshold located","right-censored","left-censo
  [1700,1500,1400,1300,1500,1500,1460],
  "The separation by effect-modification arrangement is unchanged across targets, so nothing in the main text depends on the choice of 0.80."));
 
-add(H1("Table S3. Matched and frontier comparison against all attainable subsets"));
-add(P("Every one of the 512 subsets is scored on the held-out half of each split. “Matched” keeps those whose eligible count is within ten per cent of the rule's. “On the frontier” means no scored subset admits at least as many patients at a hazard ratio at least as low. Intervals are bootstrap intervals over splits and therefore narrower than the population uncertainty reported in the main text."));
-if (PA.colon) add(table(["quantity","colon","Rotterdam"],
- [["splits", String(PA.colon.R), String(PA.rott.R)],
-  ["matched comparators per split (median)", f0(PA.colon.n_match), f0(PA.rott.n_match)],
-  ["rule beats a matched subset on log HR", f(PA.colon.rank_hr[0])+" ["+f(PA.colon.rank_hr[1])+", "+f(PA.colon.rank_hr[2])+"]", f(PA.rott.rank_hr[0])+" ["+f(PA.rott.rank_hr[1])+", "+f(PA.rott.rank_hr[2])+"]"],
-  ["rule beats a matched subset on RMST", f(PA.colon.rank_rm[0])+" ["+f(PA.colon.rank_rm[1])+", "+f(PA.colon.rank_rm[2])+"]", f(PA.rott.rank_rm[0])+" ["+f(PA.rott.rank_rm[1])+", "+f(PA.rott.rank_rm[2])+"]"],
-  ["rule on the count/HR frontier", f(PA.colon.front_hr[0])+" ["+f(PA.colon.front_hr[1])+", "+f(PA.colon.front_hr[2])+"]", f(PA.rott.front_hr[0])+" ["+f(PA.rott.front_hr[1])+", "+f(PA.rott.front_hr[2])+"]"],
-  ["rule on the count/RMST frontier", f(PA.colon.front_rm[0])+" ["+f(PA.colon.front_rm[1])+", "+f(PA.colon.front_rm[2])+"]", f(PA.rott.front_rm[0])+" ["+f(PA.rott.front_rm[1])+", "+f(PA.rott.front_rm[2])+"]"],
-  ["subsets dominating the rule (median)", f0(PA.colon.n_dom), f0(PA.rott.n_dom)]],
- [3800, 2800, 2760]));
+add(H1("Table S3. Matched and frontier comparison, with patient-level uncertainty"));
+add(P("All 512 subsets are scored on the held-out half of each split. “Matched” keeps those whose eligible count is within the stated tolerance of the rule's. “On the frontier” means no scored subset admits at least as many patients at a hazard ratio at least as low. The proportion is computed within a split and splits are averaged with equal weight; intervals come from the outer bootstrap over patients, not from resampling splits. Rotterdam entries are descriptive, that cohort having a severe lack of empirical overlap."));
+if (NS.colon) { const C=NS.colon, RT=NS.rott;
+  const row = (lab, key) => [lab,
+    f(C[key].point,3)+" ["+f(C[key].ci[0],2)+", "+f(C[key].ci[1],2)+"]",
+    f(RT[key].point,3)+" ["+f(RT[key].ci[0],2)+", "+f(RT[key].ci[1],2)+"]"];
+  add(table(["quantity","colon","Rotterdam (descriptive)"],
+   [["outer resamples x inner splits", C.B+" x "+C.R, RT.B+" x "+RT.R],
+    row("P(more eligible)","more"), row("P(lower hazard ratio)","lower"),
+    row("matched on HR, band 2%","hr0.02"), row("matched on HR, band 5%","hr0.05"),
+    row("matched on HR, band 10%","hr0.1"), row("matched on HR, band 15%","hr0.15"),
+    row("matched on RMST, band 10%","rm0.1"),
+    row("on count/HR frontier","front_hr"), row("on count/RMST frontier","front_rm"),
+    row("on frontier with margin "+f(C.margin,2),"front_hrM"),
+    ["matched comparators per split (median)", f0(C["nm0.1"]), f0(RT["nm0.1"])],
+    ["comparator count skew vs rule", f(C["sk0.1"],3), f(RT["sk0.1"],3)],
+    ["subsets dominating (median)", f0(C.n_dom), f0(RT.n_dom)]],
+   [3600, 2900, 2860],
+   "Point estimates are from the observed cohort; SD is decomposed as SD_outer = sqrt(SD_total^2 - SD_MC^2) in the main text. Intervals are percentile intervals of the outer distribution and are exploratory at these resample counts.")); }
+
+add(H1("Table S3b. Optimism of the empirical held-out frontier"));
+add(P("The frontier is selected from the same held-out data on which it is evaluated, so it is an argmax over 512 noisy estimates. In simulation the population is known and the optimism can be measured directly, at a held-out half the size of a colon scoring set."));
+if (FO) add(table(["quantity","judged on a held-out half","judged at the population"],
+ [["subsets dominating the rule (median)", f0(FO.dom_emp), f0(FO.dom_pop)],
+  ["rule on the frontier", f(FO.front_emp,3), f(FO.front_pop,3)],
+  ["of subsets dominating on half A, share still dominating on an independent half B", f(FO.repro,3), "—"],
+  ["of subsets dominating on half A, share genuinely dominating at the population", "—", f(FO.true_frac,3)]],
+ [4600, 2400, 2360],
+ "Roughly four in five apparently dominating subsets do not dominate at the population, and the empirical frontier understates the rule's true frontier membership by about a factor of two."));
+
+add(H1("Table S3c. Selecting on the absolute-benefit estimand instead"));
+add(P("The published rule decomposes the log hazard ratio. This variant retains every criterion whose Shapley value on the restricted mean difference is positive, and is scored out of sample on both estimands."));
+if (RR) add(table(["quantity","colon","Rotterdam (descriptive)"],
+ [["the two rules select the same criterion set", f(RR.colon.same,3), f(RR.rott.same,3)],
+  ["eligible: full protocol", f0(RR.colon.n_full), f0(RR.rott.n_full)],
+  ["eligible: HR-selected rule", f0(RR.colon.n_hr), f0(RR.rott.n_hr)],
+  ["eligible: RMST-selected rule", f0(RR.colon.n_rm), f0(RR.rott.n_rm)],
+  ["HR-selected rule: P(lower HR)", f(RR.colon.hr_lowerHR,3), f(RR.rott.hr_lowerHR,3)],
+  ["HR-selected rule: P(greater RMST)", f(RR.colon.hr_moreRM,3), f(RR.rott.hr_moreRM,3)],
+  ["RMST-selected rule: P(lower HR)", f(RR.colon.rm_lowerHR,3), f(RR.rott.rm_lowerHR,3)],
+  ["RMST-selected rule: P(greater RMST)", f(RR.colon.rm_moreRM,3), f(RR.rott.rm_moreRM,3)]],
+ [4200, 2600, 2560],
+ "Switching the decomposition to the absolute-benefit estimand changes the selected criteria almost completely and improves neither estimand out of sample."));
 
 add(H1("Table S4. Arrangement of the effect modification, total held fixed"));
 add(P("Total modification is 0.85 in every row. Rows A to C hold the diluting coefficient at 0.30 and spread the enrichment over one, two and four criteria. Row D holds the enrichment in one criterion and splits the dilution across two, halving the coefficient the rule has to detect. Entries are the probability of a lower out-of-sample hazard ratio; the scoring set is fixed at 60 000 patients."));
