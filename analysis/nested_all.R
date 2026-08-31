@@ -68,7 +68,14 @@ one_split <- function(db, crit, ps, trt, tm, st, tau, p, full, bits) {
   kR <- sum(bits[S]) + 1L; kF <- sum(bits[full]) + 1L; kM <- sum(bits[S2]) + 1L
   if (!ok[kR] || !ok[kF] || !ok[kM]) return(NULL)
   nR <- N[kR]; hR <- H[kR]; rR <- RM[kR]
-  out <- c(more = as.numeric(N[kR] > N[kF]), lower = as.numeric(H[kR] < H[kF]))
+  ## Reviewer round 6, major point 3. Comparing the two rules needs a PAIRED
+  ## difference computed inside each split, not two intervals each formed against
+  ## the full protocol: the rules share patients and splits, so their errors are
+  ## correlated and two wide marginal intervals say nothing about the difference.
+  ## The HR rule's absolute-benefit indicator was missing here; both are recorded
+  ## now, and the paired differences are formed per split.
+  out <- c(more = as.numeric(N[kR] > N[kF]), lower = as.numeric(H[kR] < H[kF]),
+           greater = as.numeric(RM[kR] > RM[kF]))
   for (b in BANDS) {
     m <- ok & abs(N - nR) <= b * nR; m[kR] <- FALSE
     out[paste0("rank_hr_", b)] <- if (sum(m)) mean(H[m] > hR) else NA_real_
@@ -89,6 +96,9 @@ one_split <- function(db, crit, ps, trt, tm, st, tau, p, full, bits) {
   out["rmrule_more"]    <- as.numeric(N[kM] > N[kF])
   out["rmrule_lower"]   <- as.numeric(H[kM] < H[kF])
   out["rmrule_greater"] <- as.numeric(RM[kM] > RM[kF])
+  ## paired, within-split differences: RMST-selected rule minus published rule
+  out["d_pair_lower"]   <- out["rmrule_lower"]   - out["lower"]
+  out["d_pair_greater"] <- out["rmrule_greater"] - out["greater"]
   out
 }
 
@@ -139,7 +149,10 @@ nested <- function(dat, crit, ps, trt, tm, st, tau, label, seed = 5) {
   rep1("front_hrM", sprintf("on frontier, margin %.2f", MARGIN))
   rep1("rm_same", "RMST rule picks same set"); rep1("rmrule_more", "RMST rule: P(more)")
   rep1("rmrule_lower", "RMST rule: P(lower HR)")
+  rep1("greater", "P(greater RMST)")
   rep1("rmrule_greater", "RMST rule: P(greater RMST)")
+  rep1("d_pair_lower", "PAIRED diff, P(lower HR)")
+  rep1("d_pair_greater", "PAIRED diff, P(greater RMST)")
   say(sprintf("  matched comparators per split : %s",
       paste(sprintf("%.0f%%:%.0f", 100*BANDS,
             vapply(BANDS, function(b) point[paste0("nmatch_", b)], numeric(1))), collapse="  ")))
@@ -150,7 +163,8 @@ nested <- function(dat, crit, ps, trt, tm, st, tau, label, seed = 5) {
   ## endpoint stability: recompute each interval from growing subsets of the draws
   say("  percentile-endpoint stability (first k resamples):")
   conv <- c("more","lower","front_hr","front_rm","front_hrM",
-            "rm_same","rmrule_more","rmrule_lower","rmrule_greater",
+            "greater","rm_same","rmrule_more","rmrule_lower","rmrule_greater",
+            "d_pair_lower","d_pair_greater",
             paste0("rank_hr_", BANDS), paste0("rank_rm_", BANDS))
   ks <- unique(c(50, 100, floor(nrow(boot)/2), nrow(boot)))
   ks <- ks[ks >= 25 & ks <= nrow(boot)]

@@ -1,0 +1,23 @@
+11:47:59 
+===== colon : 100 outer x 25 inner three-way splits ===== 
+11:47:59   repro         0.364 | SD tot 0.080 (MC 0.066, outer 0.044) | 95% [0.288, 0.570] | half-vs-full 0.011 
+11:47:59   reproM        0.379 | SD tot 0.077 (MC 0.070, outer 0.032) | 95% [0.278, 0.560] | half-vs-full 0.018 
+11:47:59   front_sel     0.000 | SD tot 0.040 (MC 0.036, outer 0.017) | 95% [0.000, 0.160] | half-vs-full 0.008 
+11:47:59   front_conf    0.160 | SD tot 0.093 (MC 0.072, outer 0.059) | 95% [0.040, 0.360] | half-vs-full 0.000 
+11:47:59   front_test    0.000 | SD tot 0.040 (MC 0.038, outer 0.010) | 95% [0.000, 0.120] | half-vs-full 0.032 
+11:47:59   best_holds    0.480 | SD tot 0.096 (MC 0.098, outer 0.000) | 95% [0.208, 0.574] | half-vs-full 0.036 
+11:47:59   n_domB      171.080 | SD tot 32.745 (MC 26.205, outer 19.636) | 95% [64.494, 187.868] | half-vs-full 20.442 
+11:47:59   n_survive    79.280 | SD tot 21.895 (MC 17.333, outer 13.377) | 95% [23.364, 104.260] | half-vs-full 10.852 
+11:47:59   n_domC      152.840 | SD tot 34.040 (MC 26.573, outer 21.275) | 95% [71.934, 197.306] | half-vs-full 16.446 
+12:54:41 
+===== rott : 100 outer x 25 inner three-way splits ===== 
+12:54:41   repro         0.383 | SD tot 0.078 (MC 0.067, outer 0.040) | 95% [0.253, 0.542] | half-vs-full 0.008 
+12:54:41   reproM        0.393 | SD tot 0.080 (MC 0.070, outer 0.040) | 95% [0.251, 0.550] | half-vs-full 0.021 
+12:54:41   front_sel     0.040 | SD tot 0.049 (MC 0.043, outer 0.024) | 95% [0.000, 0.160] | half-vs-full 0.008 
+12:54:41   front_conf    0.200 | SD tot 0.089 (MC 0.075, outer 0.049) | 95% [0.040, 0.360] | half-vs-full 0.000 
+12:54:41   front_test    0.040 | SD tot 0.045 (MC 0.042, outer 0.017) | 95% [0.000, 0.160] | half-vs-full 0.000 
+12:54:41   best_holds    0.417 | SD tot 0.099 (MC 0.101, outer 0.000) | 95% [0.261, 0.622] | half-vs-full 0.007 
+12:54:41   n_domB       90.440 | SD tot 32.814 (MC 21.199, outer 25.047) | 95% [49.174, 167.154] | half-vs-full 1.070 
+12:54:41   n_survive    38.440 | SD tot 14.745 (MC 10.600, outer 10.249) | 95% [13.116, 66.456] | half-vs-full 3.696 
+12:54:41   n_domC       88.960 | SD tot 30.971 (MC 21.442, outer 22.348) | 95% [49.468, 161.338] | half-vs-full 21.998 
+12:54:41 ALL DONE 

@@ -67,6 +67,38 @@ the halves share none. Correcting the leak narrowed the intervals.
 | `snr_check.R` | is a criterion-specific signal-to-noise ratio the better governing quantity? | R3 major 5 |
 | `colon_weighting_oos.R` | the three weighting schemes carried through the full out-of-sample evaluation | R3 minor 1 |
 
+### Added in the sixth revision
+
+The fifth review's fixes were sound but incomplete in a specific way: we applied a
+standard to most of the paper and then exempted the numbers we had just promoted to
+the abstract.
+
+| file | what it does |
+|---|---|
+| `threeway_nested.R` | wraps the whole fit / select / test pipeline in the outer bootstrap over patient identifiers, with the three-way split itself taken over unique ids. The confirmatory three-way quantities had been point estimates over repeated splits with no patient-level uncertainty, while the Methods claimed otherwise. |
+
+`nested_all.R` also records the published rule's absolute-benefit indicator, which
+was missing, and forms the PAIRED difference between the two rules inside each split.
+Two intervals each formed against the full protocol cannot say which rule is better,
+because the rules share patients and splits; the paired difference can, and it puts
+both estimands' advantage at not established.
+
+`export_numbers.R` gained an integer schema. The provenance check over the manuscript
+sources cannot see bare integers, so 18 counts a reader relies on — both cohort sizes,
+the criterion and subset counts, both horizons, every split and resample count, the
+simulation replicate counts and the number of factorial scenarios — are asserted
+individually and the build stops if any changes. It also logs the gap between the
+three-way point estimate and the bootstrap's own observed-data replicate, which is
+large (up to 0.14) and is reported in the paper rather than hidden by the tolerance.
+
+Claims corrected in this round: the title and the Conclusions no longer say no
+unconditional data requirement EXISTS, only that none could be determined from cohort
+size, event count or effective sample size across the mechanisms simulated; the paper
+now names all four interval procedures it uses instead of claiming two, and
+acknowledges that the Monte Carlo one uses a multiplier; the across-scenario spread is
+given as a range across sizes rather than as one value "at every fixed sample size",
+which was false at two of the four sizes.
+
 ### Added in the fifth revision
 
 The fifth review found that the fourth cover letter's central claim — that every

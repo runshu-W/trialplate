@@ -21,7 +21,7 @@ const W=t=>add(P(t,{size:19,color:"55606B",after:190}));
 
 add(new Paragraph({spacing:{after:60},children:[new TextRun({
   text:"Response to the fourth review",bold:true,size:30,font:"Calibri"})]}));
-add(P("Manuscript: What data-driven relaxation of trial eligibility criteria can and cannot promise: an out-of-sample evaluation, and why no unconditional data requirement exists",{size:20,color:"555555",after:250}));
+add(P("Manuscript: What data-driven relaxation of trial eligibility criteria can and cannot promise: an out-of-sample evaluation, and why no data requirement can be read from cohort size alone",{size:20,color:"555555",after:250}));
 
 add(P("The first comment led us to an error that matters more than the inconsistency the reviewer observed. Chasing it down, we found that the analyses added in the second and third revisions had been run on the Rotterdam cohort with the relapse-free survival time paired with the death indicator, at a five-year horizon, while Table 1 used the death time with the death indicator at seven years. That is not a valid pair: it censors deaths at relapse times and systematically shortens event times. It was not Monte Carlo noise between two runs; it was two different endpoints. We have corrected it, rebuilt every affected number, and restructured the analysis so that it cannot recur. We are grateful the reviewer pressed on a discrepancy we had explained away.",{after:250}));
 

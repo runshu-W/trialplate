@@ -59,13 +59,18 @@ const ALLOWED = new Map(Object.entries({
 }));
 
 /* Files whose prose is scanned. */
-const FILES = ["make.js", "part2.js", "part3.js", "supp.js", "response5.js"];
+/* Round 6: build.js and refs.js also emit prose (declarations, acknowledgements,
+ * the reference list), so they are scanned too; the Methods describe the check as
+ * covering the manuscript sources, and it should. */
+const FILES = ["make.js", "part2.js", "part3.js", "supp.js", "build.js", "refs.js",
+               "response5.js", "response6.js"];
 
 /* A response letter has to be able to quote the wrong value it is correcting.
  * Those quotations are listed here explicitly rather than being exempted by a
  * blanket rule, so each one is visible. */
 const QUOTED_ERRORS = new Map(Object.entries({
   "response5.js": ["32%", "10", "30"],
+  "response6.js": [],
 }));
 
 /* Walk the source once, tracking string and comment state, and return every
@@ -122,6 +127,8 @@ for (const file of FILES) {
   for (const { text, line } of stringsOf(src)) {
     /* keys into the result object, e.g. "hr0.1", are not prose */
     if (/^[a-z_]+[0-9.]*$/i.test(text)) continue;
+    /* A DOI or a journal citation is bibliographic, not a reported figure. */
+    if (/\bdoi:/i.test(text) || /\b\d{4};\d+/.test(text)) continue;
     /* format strings and separators are not prose */
     if (/^[\s%.,;:|()\[\]+-]*$/.test(text)) continue;
     /* NOTE: table cells are NOT exempt. The audit found that requiring three

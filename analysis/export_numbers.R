@@ -139,7 +139,12 @@ prm <- function(lab) {
             d_n = m("n_rule") - m("n_full"), d_hr = m("hr_rule") - m("hr_full"),
             d_rm = m("rm_rule") - m("rm_full"),
             removed_any = m("removed_any"), removed_binding = m("removed_binding"),
-            n_removed = m("n_removed"))
+            n_removed = m("n_removed"),
+            ## Reviewer round 6, major point 3: the paired difference between the two
+            ## rules, as a point estimate, belongs with every other point estimate.
+            ## The nested bootstrap supplies only its interval.
+            d_pair_lower = m("rmrule_lower") - m("lower"),
+            d_pair_greater = m("rmrule_greater") - m("greater"))
   for (b in z$BANDS) { o[[paste0("hr",b)]] <- m(paste0("hr",b))
                        o[[paste0("rm",b)]] <- m(paste0("rm",b))
                        o[[paste0("nm",b)]] <- m(paste0("nm",b))
@@ -174,6 +179,8 @@ nst <- function(lab) {
               front_hr = g("front_hr"), front_rm = g("front_rm"), front_hrM = g("front_hrM"),
               rm_same = g("rm_same"), rmrule_more = g("rmrule_more"),
               rmrule_lower = g("rmrule_lower"), rmrule_greater = g("rmrule_greater"),
+              greater = g("greater"),
+              d_pair_lower = g("d_pair_lower"), d_pair_greater = g("d_pair_greater"),
               n_dom = unname(point["n_dom"]), n_domM = unname(point["n_domM"]))
   for (b in z$BANDS) { out[[paste0("hr", b)]] <- g(paste0("rank_hr_", b))
                        out[[paste0("rm", b)]] <- g(paste0("rank_rm_", b))
@@ -227,7 +234,14 @@ if (!is.null(sc)) {
   af  <- factor(Tm[, "arr"])
   adj <- sp(stats::residuals(stats::lm(Tm[, "win"] ~ af)),
             stats::residuals(stats::lm(Tm[, "snr"] ~ af)))
-  J$snr_curve <- list(cells = lapply(seq_len(nrow(Tm)), function(i) as.list(Tm[i, ])),
+  ## Reviewer round 6: this table reported twelve simulated probabilities with no
+  ## Monte Carlo error, against the Methods. The binomial SE at each cell's own
+  ## replicate count is carried with the cell.
+  cells <- lapply(seq_len(nrow(Tm)), function(i) {
+    z <- as.list(Tm[i, ])
+    z$se <- sqrt(max(z$win * (1 - z$win), 0) / max(z$rep, 1))
+    z })
+  J$snr_curve <- list(cells = cells,
                       sp_snr = sc$sp_snr, sp_n = sc$sp_n, nrep = sc$nrep, sizes = sc$sizes,
                       sp_between = sp(Tm[big, "win"], Tm[big, "snr"]),
                       sp_within  = adj,
@@ -241,7 +255,17 @@ if (!is.null(fo)) { m <- function(x) mean(x[is.finite(x)])
   J$frontier_opt <- list(R = nrow(fo),
     dom_emp = median(fo[,"n_domA"]), dom_pop = median(fo[,"n_domP"]),
     front_emp = m(fo[,"front_emp"]), front_pop = m(fo[,"front_pop"]),
-    repro = m(fo[,"repro_B"]), true_frac = m(fo[,"true_frac"])) }
+    repro = m(fo[,"repro_B"]), true_frac = m(fo[,"true_frac"]),
+    ## Reviewer round 6, major point 4. These four are simulated probabilities and
+    ## were reported without a replicate count or any Monte Carlo uncertainty,
+    ## which contradicts the Methods. Both are supplied here.
+    se = local({ f <- function(k) { x <- fo[,k]; x <- x[is.finite(x)]
+                   stats::sd(x)/sqrt(length(x)) }
+      list(front_emp = f("front_emp"), front_pop = f("front_pop"),
+           repro = f("repro_B"), true_frac = f("true_frac")) }),
+    n_eff = local({ f <- function(k) sum(is.finite(fo[,k]))
+      list(front_emp = f("front_emp"), front_pop = f("front_pop"),
+           repro = f("repro_B"), true_frac = f("true_frac")) })) }
 
 cw <- rd("analysis/out/colon_weighting_oos.rds")
 if (!is.null(cw)) { m <- function(x) mean(x[is.finite(x)])
@@ -496,6 +520,34 @@ if (!is.null(ovr)) J$overlap <- lapply(ovr, function(M) {
     list(size = sz, n_subsets = nrow(z), n = md(z$n), ess_frac = md(z$ess_frac),
          trunc = md(z$trunc), maxsmd = md(z$maxsmd), events = md(z$events)) }) })
 
+## Reviewer round 6, major point 1. The three-way analysis now has its own outer
+## bootstrap over patients, wrapping the whole fit / select / test pipeline.
+twn <- function(lab) {
+  z <- rd(sprintf("analysis/out/threeway_nested_%s.rds", lab)); if (is.null(z)) return(NULL)
+  M <- z$M; point <- M[1, ]; boot <- M[-1, , drop = FALSE]
+  Vb <- z$V[-1, , drop = FALSE]; Kb <- z$K[-1, , drop = FALSE]
+  g <- function(nm) { if (!(nm %in% colnames(boot))) return(NULL)
+    x <- boot[, nm]; x <- x[is.finite(x)]
+    vt <- stats::var(x); u <- Vb[, nm]/pmax(Kb[, nm], 1); vm <- mean(u[is.finite(u)])
+    h <- floor(length(x)/2)
+    mv <- if (h >= 20) max(abs(stats::quantile(x[seq_len(h)], c(.025,.975)) -
+                               stats::quantile(x, c(.025,.975)))) else NA_real_
+    list(point = unname(point[nm]), sd_total = sqrt(vt), sd_mc = sqrt(vm),
+         sd_outer = sqrt(max(vt - vm, 0)), conv = unname(mv),
+         ci = unname(stats::quantile(x, c(.025,.975)))) }
+  out <- list(B = z$B_OUT, R = z$R_IN, margin = z$MARGIN)
+  for (nm in c("repro","reproM","front_sel","front_conf","front_test","best_holds",
+               "n_domB","n_survive","n_domC")) out[[nm]] <- g(nm)
+  out
+}
+J$threeway_nested <- list(colon = twn("colon"), rott = twn("rott"))
+if (!is.null(J$threeway_nested$colon) && !is.null(J$threeway)) {
+  gaps <- unlist(lapply(c("colon","rott"), function(l)
+    vapply(c("repro","front_conf","best_holds"), function(nm)
+      abs(J$threeway_nested[[l]][[nm]]$point - J$threeway[[l]][[nm]]), numeric(1))))
+  J$threeway_nested$max_gap <- max(gaps)
+}
+
 ## ---- static facts computed here -----------------------------------------
 J$efficiency <- local({
   pr <- tp_prepare(colon_data(), colon_criteria, "trt","time","status", colon_ps, tau=1825)
@@ -587,6 +639,25 @@ if (!is.null(J$primary$colon)) {
 ## estimate of a quantity the primary analysis already reports. They now share the
 ## primary run's seed, split count and split function, so the overlapping cell must
 ## agree exactly; if it does not, the runs have drifted apart again.
+## The three-way point estimates come from the larger repeated-split run and the
+## intervals from the outer bootstrap, the same division of labour as the primary
+## analysis and the nested bootstrap. They must still agree to within the Monte
+## Carlo noise of the bootstrap's own inner split count.
+if (!is.null(J$threeway_nested$colon) && !is.null(J$threeway)) {
+  for (lab in c("colon","rott")) {
+    tn <- J$threeway_nested[[lab]]; tw <- J$threeway[[lab]]
+    for (nm in c("repro","front_conf","best_holds")) {
+      if (is.null(tn[[nm]])) next
+      tol <- max(3 * tn[[nm]]$sd_mc, 0.05)
+      chk(abs(tn[[nm]]$point - tw[[nm]]) < tol,
+          sprintf("%s three-way %s: repeated-split %.3f vs bootstrap b=1 %.3f, beyond %.3f",
+                  lab, nm, tw[[nm]], tn[[nm]]$point, tol))
+      say(sprintf("  three-way %s %-11s repeated-split %.3f | bootstrap b=1 %.3f | gap %.3f (tol %.3f)",
+                  lab, nm, tw[[nm]], tn[[nm]]$point, abs(tn[[nm]]$point - tw[[nm]]), tol))
+    }
+  }
+}
+
 if (!is.null(J$colon_wt) && !is.null(J$primary$colon))
   chk(abs(J$colon_wt$ps$lower - J$primary$colon$lower) < 1e-9,
       sprintf("weighting sensitivity ps arm (%.4f) must reproduce the primary colon P(lower) (%.4f)",
@@ -604,5 +675,59 @@ if (!is.null(J$horizon) && !is.null(J$primary$colon)) {
 }
 
 }
+
+## Reviewer round 6. The Methods illustrated Rotterdam's near-deterministic
+## assignment with two counts that had no source and that we could not reproduce.
+## The illustration is computed here, with its definition stated, so it can be.
+J$rott_age_band <- local({
+  d <- rott_data()
+  pr <- tryCatch(tp_prepare(d, rott_criteria, "trt","dtime","death", rott_ps, tau = 2555),
+                 error = function(e) NULL)
+  if (is.null(pr)) return(NULL)
+  k <- Reduce(`&`, lapply(seq_len(pr$p), function(j) pr$E[, j]))
+  dd <- pr$d[k, , drop = FALSE]; tr <- pr$trt[k]
+  band <- dd$age >= 55 & dd$age <= 70
+  list(lo = 55L, hi = 70L, n_band = sum(band), n_treated = sum(tr[band] == 1),
+       n_full = sum(k))
+})
+
+## Reviewer round 6, major point 4. The provenance check cannot see bare integers,
+## so the counts a reader most relies on were verified by hand. Hand verification is
+## exactly what failed in earlier rounds, so the important integers now carry an
+## explicit schema: the export states what each must be and stops the build if it
+## is not. These are the numbers quoted in the Methods, the Results and the tables.
+INTEGER_SCHEMA <- list(
+  list("colon cohort size",            function() nrow(colon_data()),                    619L),
+  list("Rotterdam cohort size",        function() nrow(rott_data()),                     2982L),
+  list("colon criteria",               function() length(colon_criteria),                9L),
+  list("Rotterdam criteria",           function() length(rott_criteria),                 9L),
+  list("subsets enumerated per cohort",function() 2^length(colon_criteria),              512L),
+  list("colon horizon (days)",         function() J$primary$colon$tau,                   1825L),
+  list("Rotterdam horizon (days)",     function() J$primary$rott$tau,                    2555L),
+  list("colon primary splits",         function() J$primary$colon$R,                     500L),
+  list("Rotterdam primary splits",     function() J$primary$rott$R,                      400L),
+  list("outer bootstrap resamples",    function() J$nested$colon$B,                      150L),
+  list("inner splits per resample",    function() J$nested$colon$R,                      25L),
+  list("factorial scenarios",          function() J$factorial$n_runs,                    16L),
+  list("colon three-way splits",       function() J$threeway$colon$R,                    400L),
+  list("Rotterdam three-way splits",   function() J$threeway$rott$R,                     300L),
+  list("three-way outer resamples",    function() J$threeway_nested$colon$B,             100L),
+  list("three-way inner splits",       function() J$threeway_nested$colon$R,             25L),
+  list("frontier simulation replicates", function() J$frontier_opt$R,                    160L),
+  list("coverage replicates",          function() J$coverage$reps,                       420L)
+)
+bad_int <- character(0)
+for (row in INTEGER_SCHEMA) {
+  got <- tryCatch(as.integer(row[[2]]()), error = function(e) NA_integer_)
+  if (is.na(got) || got != row[[3]])
+    bad_int <- c(bad_int, sprintf("%s: expected %d, got %s", row[[1]], row[[3]],
+                                  ifelse(is.na(got), "NA", as.character(got))))
+}
+if (length(bad_int))
+  stop("integer schema check failed:\n  ", paste(bad_int, collapse = "\n  "))
+say("integer schema check passed (", length(INTEGER_SCHEMA), " counts)")
+J$integers <- setNames(lapply(INTEGER_SCHEMA, function(r) r[[3]]),
+                       vapply(INTEGER_SCHEMA, function(r) r[[1]], character(1)))
+
 writeLines(tojson(J), "analysis/out/numbers.json")
 say(sprintf("exported %d blocks", length(J)))

@@ -1,23 +1,31 @@
 ================================================================
  trialplate: clean rebuild from stored result objects to documents
- 2026-08-31 10:47:32 UTC
+ 2026-08-31 15:49:39 UTC
  R 4.3.3   node v22.22.2
 ================================================================
 
 --- 1. export: guards and consistency assertions ---------------
-10:47:34 superseded-object check passed ( 5  objects retired) 
-10:47:34 endpoint source check passed over  49  scripts 
-10:47:34 exported 32 blocks 
+15:49:41 superseded-object check passed ( 5  objects retired) 
+15:49:41 endpoint source check passed over  50  scripts 
+15:49:41   three-way colon repro       repeated-split 0.353 | bootstrap b=1 0.364 | gap 0.011 (tol 0.199) 
+15:49:41   three-way colon front_conf  repeated-split 0.210 | bootstrap b=1 0.160 | gap 0.050 (tol 0.217) 
+15:49:41   three-way colon best_holds  repeated-split 0.336 | bootstrap b=1 0.480 | gap 0.144 (tol 0.295) 
+15:49:41   three-way rott repro       repeated-split 0.414 | bootstrap b=1 0.383 | gap 0.031 (tol 0.200) 
+15:49:41   three-way rott front_conf  repeated-split 0.120 | bootstrap b=1 0.200 | gap 0.080 (tol 0.225) 
+15:49:41   three-way rott best_holds  repeated-split 0.394 | bootstrap b=1 0.417 | gap 0.023 (tol 0.303) 
+15:49:41 integer schema check passed ( 18  counts) 
+15:49:41 exported 35 blocks 
 
 --- 2. number provenance over the manuscript sources -----------
-number provenance check passed over 5 manuscript sources; 37 structural constants whitelisted
+number provenance check passed over 8 manuscript sources; 37 structural constants whitelisted
 
 --- 3. documents -----------------------------------------------
-number provenance check passed over 5 manuscript sources; 37 structural constants whitelisted
-written 793707 bytes; 22 of 22 references cited
-supplement written 485030 bytes
-written 13508 bytes
-written 18450 bytes
+number provenance check passed over 8 manuscript sources; 37 structural constants whitelisted
+written 795223 bytes; 22 of 22 references cited
+supplement written 486182 bytes
+written 13510 bytes
+written 12848 bytes
+written 18594 bytes
 
 --- 4. what the guards checked ---------------------------------
 retired result objects held out of the read path:
