@@ -40,6 +40,6 @@ scan_subsets <- function(d, crit, ps, trt, tm, st, tau, label) {
 }
 sink("analysis/out/overlap_vs_restriction.txt", split = TRUE)
 A <- scan_subsets(colon_data(), colon_criteria, colon_ps, "trt","time","status", 1825, "colon (randomised)")
-B <- scan_subsets(rott_data(),  rott_criteria,  rott_ps,  "trt","rtime","death", 1825, "Rotterdam (registry)")
+B <- scan_subsets(rott_data(),  rott_criteria,  rott_ps,  "trt","dtime","death", 2555, "Rotterdam (registry)")
 sink()
 saveRDS(list(colon = A, rott = B), "analysis/out/overlap_vs_restriction.rds")

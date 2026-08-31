@@ -45,7 +45,7 @@ const add = (...x) => x.forEach(e => Array.isArray(e) ? body.push(...e) : body.p
 
 /* ---------------- title page ---------------- */
 add(new Paragraph({spacing:{after:220}, children:[new TextRun({
-  text:"What data-driven relaxation of trial eligibility criteria can and cannot promise: an out-of-sample validation, and why no unconditional data requirement exists",
+  text:"What data-driven relaxation of trial eligibility criteria can and cannot promise: an out-of-sample evaluation, and why no unconditional data requirement exists",
   bold:true, size:30, font:"Calibri"})]}));
 add(P([R("Author One"), R("1", {sup:true}), R(", Author Two"), R("2", {sup:true}),
        R(", Corresponding Author"), R("1,*", {sup:true})], {after: 100}));
@@ -53,21 +53,25 @@ add(P([R("1 ", {sup:true}), R("Affiliation to be completed. "), R("2 ", {sup:tru
        R("Affiliation to be completed.")], {size: 20, after: 100}));
 add(P([R("* Correspondence: ", {b:true}), R("runshu.wang@gmail.com")], {size: 20, after: 320}));
 
+/* every quoted number is read from the analysis outputs, never transcribed */
+const NUM = JSON.parse(fs.readFileSync("/home/claude/repo/analysis/out/numbers.json","utf8"));
+const _pc = (x, k) => (100*x).toFixed(k===undefined?1:k) + "%";
+const _PRC = (NUM.primary||{}).colon || {}, _PRR = (NUM.primary||{}).rott || {};
+const _FO = NUM.frontier_opt || {};
+
 /* ---------------- abstract ---------------- */
 add(H1("Abstract"));
 add(P([R("Background. ", {b:true}), R(
-"Rules that relax clinical-trial eligibility criteria using real-world data make two promises: that more patients become eligible, and that the estimated treatment effect does not suffer. To our knowledge neither has been validated out of sample, and no guidance exists on how much data such a rule needs.")]));
+"Rules that relax clinical-trial eligibility criteria using real-world data make two promises: that more patients become eligible, and that the estimated treatment effect does not suffer. To our knowledge neither has been evaluated out of sample, and no guidance exists on how much data such a rule needs.")]));
 add(P([R("Methods. ", {b:true}), R(
 "We implemented the published rule — retain every criterion whose Shapley value on the log hazard ratio is negative — and evaluated it by repeated stratified sample splitting in two fully public cohorts: a randomised adjuvant colon-cancer trial (n = 619) and the Rotterdam breast-cancer registry (n = 2982). Because the eligible count is monotone in the criteria removed, the rule was compared not against the full protocol alone but against all 512 subsets scored on the held-out half, matched on eligible count and placed against the empirical held-out frontier, whose optimism is quantified separately in simulation. Every out-of-sample quantity passes through an outer bootstrap split by patient identifier. Simulation with a fixed 100 000-patient scoring set isolated fitting-cohort size across a resolution-IV factorial in six factors, reported as success probability at fixed sizes, and a further sweep varied how a fixed total of effect modification is arranged.")]));
 add(P([R("Results. ", {b:true}), R(
-"Matched on eligible count and carried through patient-level resampling, the rule reached a lower hazard ratio than a comparable subset in 56.4% of colon splits and 49.6% of Rotterdam splits, and was at or below one half on the restricted mean difference; every interval contains one half, so neither an advantage nor its absence is established. Its choice was almost never on the empirical held-out frontier, but simulation shows that frontier is optimistic: only 19.5% of apparently dominating subsets genuinely dominate at the population and 37.6% reproduce on an independent half. A variant selecting on the restricted mean difference agrees with the published rule on the criterion set in 8.3% of splits and improves neither estimand out of sample. The effect-estimate promise was not kept in either cohort (0.270 and 0.497). Across the factorial the success probability varied by about 0.34 in standard deviation at every fixed sample size, and equally whether scenarios were grouped by patients, events or effective sample size. Halving the diluting signal across two criteria cut success from 0.85 to 0.43 at 18 000 fitting patients, though it also halves the attainable improvement. Omitting one confounder returned apparent reliability to randomised levels while inflating the estimator's population limit by 32% and halving correct selection.")]));
+"Matched on eligible count and carried through patient-level resampling, the rule reached a lower hazard ratio than a comparable subset in " + _pc(_PRC["hr0.1"]) + " of colon splits and " + _pc(_PRR["hr0.1"]) + " of Rotterdam splits, and was near one half on the restricted mean difference; every interval contains one half, so neither an advantage nor its absence is established. Its choice was almost never on the empirical held-out frontier, but simulation shows that frontier is optimistic: only " + _pc(_FO.true_frac) + " of apparently dominating subsets genuinely dominate at the population and " + _pc(_FO.repro) + " reproduce on an independent half. A variant selecting on the restricted mean difference agrees with the published rule on the criterion set in " + _pc(_PRC.same_set) + " of colon splits and did not improve either estimand out of sample, though the same patient-level uncertainty applies to it. The observed proportion of splits in which the data-driven protocol reached a lower out-of-sample hazard ratio than the original was below one half in colon (" + _PRC.lower.toFixed(3) + ") and close to one half in Rotterdam (" + _PRR.lower.toFixed(3) + "); with patient-level intervals this establishes neither failure nor success of the effect-estimate promise. Across the factorial the success probability varied by about 0.34 in standard deviation at every fixed sample size, and equally whether scenarios were grouped by patients, events or effective sample size. Halving the diluting signal across two criteria cut success from 0.85 to 0.43 at 18 000 fitting patients, but it also roughly halves the attainable improvement, so the two cannot be separated in that design. Omitting one confounder returned apparent reliability to randomised levels while inflating the estimator's population limit by 32% and halving correct selection.")]));
 add(P([R("Conclusions. ", {b:true}), R(
 "Data-driven relaxation widens the eligible population, but that widening follows largely from the structure of the rule, and whether the procedure adds anything at matched inclusiveness is not resolved by cohorts of this size. What the point estimates do favour is specific to the hazard ratio and does not appear on absolute benefit. The data requirement cannot be read from cohort size, event count or effective sample size alone; it can be stated conditionally on an assumed minimum diluting signal, as a power calculation is stated on an assumed minimum effect. Incomplete adjustment can make the procedure appear more reliable while its selection is less accurate.")]));
 add(P([R("Keywords: ", {b:true}), R(
-"eligibility criteria; trial emulation; real-world data; Shapley value; non-collapsibility; restricted mean survival time; out-of-sample validation; sample size")], {after: 260}));
+"eligibility criteria; trial emulation; real-world data; Shapley value; non-collapsibility; restricted mean survival time; out-of-sample evaluation; sample size")], {after: 260}));
 
-/* every quoted number is read from the analysis outputs, never transcribed */
-const NUM = JSON.parse(fs.readFileSync("/home/claude/repo/analysis/out/numbers.json","utf8"));
 const f = (x, k = 3) => (x === null || x === undefined || Number.isNaN(x)) ? "[pending]" : Number(x).toFixed(k);
 const f0 = x => f(x, 0);
 const pct = (x, k = 1) => (x === null || x === undefined) ? "[pending]" : (100*Number(x)).toFixed(k) + "%";

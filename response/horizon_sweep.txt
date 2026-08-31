@@ -1,0 +1,23 @@
+03:58:52 
+===== colon ===== 
+03:58:52   maximum observed follow-up 3309 d; median 2006 d 
+03:58:54     tau  1095 d : still under observation arm 0 0.65 | arm 1 0.74 
+03:58:54     tau  1460 d : still under observation arm 0 0.56 | arm 1 0.67 
+03:58:54     tau  1825 d : still under observation arm 0 0.51 | arm 1 0.62 
+03:58:54     tau  2190 d : still under observation arm 0 0.33 | arm 1 0.42 
+04:02:54     tau  1095 d : same set 0.025 | Jaccard 0.524 | mean Hamming 3.21 | RMST full +11.5, HR-rule +14.9, RMST-rule +23.8 
+04:07:07     tau  1460 d : same set 0.040 | Jaccard 0.615 | mean Hamming 2.48 | RMST full +41.6, HR-rule +42.8, RMST-rule +47.7 
+04:11:36     tau  1825 d : same set 0.045 | Jaccard 0.675 | mean Hamming 2.03 | RMST full +74.9, HR-rule +67.9, RMST-rule +68.5 
+04:15:47     tau  2190 d : same set 0.095 | Jaccard 0.724 | mean Hamming 1.70 | RMST full +121.2, HR-rule +103.7, RMST-rule +95.2 
+04:15:47 
+===== Rotterdam ===== 
+04:15:47   maximum observed follow-up 7043 d; median 2638 d 
+04:15:47     tau  1825 d : still under observation arm 0 0.70 | arm 1 0.69 
+04:15:47     tau  2190 d : still under observation arm 0 0.61 | arm 1 0.59 
+04:15:47     tau  2555 d : still under observation arm 0 0.54 | arm 1 0.49 
+04:15:47     tau  2920 d : still under observation arm 0 0.42 | arm 1 0.41 
+04:26:11     tau  1825 d : same set 0.067 | Jaccard 0.611 | mean Hamming 2.19 | RMST full +72.4, HR-rule +91.1, RMST-rule +81.6 
+04:36:35     tau  2190 d : same set 0.100 | Jaccard 0.660 | mean Hamming 1.88 | RMST full +113.6, HR-rule +128.5, RMST-rule +122.3 
+04:46:56     tau  2555 d : same set 0.140 | Jaccard 0.703 | mean Hamming 1.57 | RMST full +157.2, HR-rule +167.3, RMST-rule +157.4 
+04:57:07     tau  2920 d : same set 0.220 | Jaccard 0.748 | mean Hamming 1.33 | RMST full +215.1, HR-rule +215.1, RMST-rule +205.0 
+04:57:07 ALL DONE 

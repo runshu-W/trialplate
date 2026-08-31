@@ -1,0 +1,56 @@
+Fourth revision: one primary analysis, a corrected Rotterdam endpoint, and softer claims
+
+The review began from a main-text / supplement inconsistency that the previous
+response had explained away as Monte Carlo noise. It was not. Eleven analysis
+scripts specified the Rotterdam endpoint as ("rtime", "death") at tau = 1825 --
+the relapse-free TIME paired with the DEATH indicator, which is not a valid pair
+and systematically shortens event times -- while rule_eval.R, behind Table 1,
+correctly used ("dtime", "death") at tau = 2555. All eleven are corrected and
+every affected number is rebuilt.
+
+Structural fix so it cannot recur:
+- analysis/primary.R (new) produces every observed-cohort point estimate quoted
+  anywhere in the paper, in one pass per cohort, into one result file. The
+  abstract, main text, Table 1 and supplement all read from it; the nested
+  bootstrap now supplies uncertainty only.
+- export_numbers.R asserts on the exported numbers (endpoint names, both
+  horizons, primary-vs-nested agreement) and scans the source of all 48 analysis
+  scripts, refusing to export if any line pairs rtime with death or calls a
+  Rotterdam dataset at the colon horizon.
+
+New analyses:
+- analysis/threeway.R  fit / select / test thirds, measuring frontier optimism
+  inside the real cohorts. 35.3% of colon dominators and 41.4% of Rotterdam
+  dominators survive on untouched patients; frontier membership moves only
+  2.5% -> 4.3%.
+- analysis/horizon_sweep.R  the restricted-mean horizon rationale, criterion-set
+  agreement at four horizons per cohort, and the finding that the sign of the
+  absolute-benefit comparison in colon depends on the horizon.
+- analysis/snr_curve.R  success against a criterion-specific signal-to-noise
+  ratio: Spearman 0.86 against 0.45 for fitting size, over 12 cells, reported as
+  a direction rather than an answer.
+
+nested_all.R: the inner Monte Carlo variance is now estimated from the sample
+variance of the per-split values within each resample instead of p(1-p)/R, which
+was correct only for the 0/1 statistics; matched-statistic intervals widen
+accordingly. Interval-endpoint convergence is reported for every quantity (max
+movement 0.040 colon, 0.047 Rotterdam between half and the full outer count).
+The RMST-selected rule variant is carried through the same loop, so all of its
+out-of-sample metrics now have patient-level intervals.
+
+Claims withdrawn or softened:
+- "The effect-estimate promise was not kept in either cohort" -> the observed
+  proportions were below one half, but patient-level uncertainty establishes
+  neither failure nor success.
+- "Switching the estimand gains nothing" -> point estimates no higher on either
+  estimand, intervals too wide to settle it.
+- The sentence naming the largest diluting coefficient as the governing quantity
+  is deleted; our own results contradict it.
+- "Read the requirement off conditional curves" is removed and Table 2 is
+  labelled a sensitivity analysis.
+- "Validation" -> "out-of-sample evaluation" in the title, abstract and keywords.
+
+Also: Supplement Text S1.4 factor level 10 -> 8; "between-cohort" -> 
+"outer-sampling" throughout; trailing whitespace removed; page breaks tightened
+(main 20pp, supplement 10pp, no blank pages); Chinese explainer rewritten to the
+new conclusions at 3 pages.

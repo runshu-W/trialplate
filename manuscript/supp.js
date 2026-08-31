@@ -4,7 +4,7 @@ const {Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, Table,
 const fs = require('fs');
 const NUM = JSON.parse(fs.readFileSync("/home/claude/repo/analysis/out/numbers.json","utf8"));
 const FA = NUM.factorial || {}, CN = NUM.concentration || {}, PA = NUM.pareto || {}, FX = (NUM.fixedn||{}).cells || {};
-const NS = NUM.nested || {}, FO = NUM.frontier_opt || null, RR = NUM.rmst_rule || null, SNR = NUM.snr || null, CW = NUM.colon_wt || null;
+const PR = NUM.primary || {}, NS = NUM.nested || {}, FO = NUM.frontier_opt || null, RR = NUM.rmst_rule || null, SNR = NUM.snr || null, CW = NUM.colon_wt || null;
 const f = (x,k=3) => (x===null||x===undefined||Number.isNaN(x)) ? "—" : Number(x).toFixed(k);
 const f0 = x => f(x,0);
 const W = 9360;
@@ -145,23 +145,38 @@ add(table(["reliability target","threshold located","right-censored","left-censo
 
 add(H1("Table S3. Matched and frontier comparison, with patient-level uncertainty"));
 add(P("All 512 subsets are scored on the held-out half of each split. “Matched” keeps those whose eligible count is within the stated tolerance of the rule's. “On the frontier” means no scored subset admits at least as many patients at a hazard ratio at least as low. The proportion is computed within a split and splits are averaged with equal weight; intervals come from the outer bootstrap over patients, not from resampling splits. Rotterdam entries are descriptive, that cohort having a severe lack of empirical overlap."));
-if (NS.colon) { const C=NS.colon, RT=NS.rott;
+if (NS.colon && PR.colon) { const C=NS.colon, RT=NS.rott, PC=PR.colon, PRT=PR.rott;
+  /* round 4, major 1: the point estimate always comes from the primary analysis;
+     the nested bootstrap contributes only the interval */
+  const PKEY = {more:"more", lower:"lower", front_hr:"front_hr", front_rm:"front_rm",
+    front_hrM:"front_hrM", rm_same:"same_set", rmrule_lower:"rmrule_lower",
+    rmrule_greater:"rmrule_greater"};
+  const pt = (P0, N0, key) => { const k = PKEY[key] !== undefined ? PKEY[key] : key;
+    return (P0 && P0[k] !== undefined) ? P0[k] : N0[key].point; };
   const row = (lab, key) => [lab,
-    f(C[key].point,3)+" ["+f(C[key].ci[0],2)+", "+f(C[key].ci[1],2)+"]",
-    f(RT[key].point,3)+" ["+f(RT[key].ci[0],2)+", "+f(RT[key].ci[1],2)+"]"];
+    f(pt(PC,C,key),3)+" ["+f(C[key].ci[0],2)+", "+f(C[key].ci[1],2)+"]",
+    f(pt(PRT,RT,key),3)+" ["+f(RT[key].ci[0],2)+", "+f(RT[key].ci[1],2)+"]"];
   add(table(["quantity","colon","Rotterdam (descriptive)"],
-   [["outer resamples x inner splits", C.B+" x "+C.R, RT.B+" x "+RT.R],
+   [["splits behind the point estimate", f0(PC.R), f0(PRT.R)],
+    ["outer resamples x inner splits (interval only)", C.B+" x "+C.R, RT.B+" x "+RT.R],
     row("P(more eligible)","more"), row("P(lower hazard ratio)","lower"),
     row("matched on HR, band 2%","hr0.02"), row("matched on HR, band 5%","hr0.05"),
     row("matched on HR, band 10%","hr0.1"), row("matched on HR, band 15%","hr0.15"),
     row("matched on RMST, band 10%","rm0.1"),
     row("on count/HR frontier","front_hr"), row("on count/RMST frontier","front_rm"),
     row("on frontier with margin "+f(C.margin,2),"front_hrM"),
-    ["matched comparators per split (median)", f0(C["nm0.1"]), f0(RT["nm0.1"])],
-    ["comparator count skew vs rule", f(C["sk0.1"],3), f(RT["sk0.1"],3)],
-    ["subsets dominating (median)", f0(C.n_dom), f0(RT.n_dom)]],
+    ["matched comparators per split (median)", f0(PC["nm0.1"]), f0(PRT["nm0.1"])],
+    ["comparator count skew vs rule", f(PC["sk0.1"],3), f(PRT["sk0.1"],3)],
+    ["subsets dominating (median)", f0(PC.n_dom), f0(PRT.n_dom)]].concat(
+      C.rm_same ? [row("RMST rule selects the same set","rm_same"),
+                   ["RMST rule: eligible patients (mean)", f0(PC.n_rmrule), f0(PRT.n_rmrule)],
+                   row("RMST rule: P(lower hazard ratio)","rmrule_lower"),
+                   row("RMST rule: P(greater RMST)","rmrule_greater")] : []).concat(
+      isFinite(C.lower.conv) ? [["largest endpoint movement, half vs full outer count",
+        f(Math.max.apply(null, ["more","lower","front_hr","front_rm","front_hrM","hr0.1","rm0.1"].map(k=>(C[k]||{}).conv||0)),3),
+        f(Math.max.apply(null, ["more","lower","front_hr","front_rm","front_hrM","hr0.1","rm0.1"].map(k=>(RT[k]||{}).conv||0)),3)]] : []),
    [3600, 2900, 2860],
-   "Point estimates are from the observed cohort; SD is decomposed as SD_outer = sqrt(SD_total^2 - SD_MC^2) in the main text. Intervals are percentile intervals of the outer distribution and are exploratory at these resample counts.")); }
+   "Point estimates are from the primary analysis; the nested bootstrap supplies uncertainty only. SD is decomposed as SD_outer = sqrt(SD_total^2 - SD_MC^2), with SD_MC^2 estimated from the sample variance of the per-split values within each resample rather than from p(1-p)/R. Intervals are percentile intervals of the outer distribution and are exploratory at these resample counts; the last row reports how far either endpoint moves between half and the full outer count.")); }
 
 add(H1("Table S3b. Optimism of the empirical held-out frontier"));
 add(P("The frontier is selected from the same held-out data on which it is evaluated, so it is an argmax over 512 noisy estimates. In simulation the population is known and the optimism can be measured directly, at a held-out half the size of a colon scoring set."));
@@ -185,7 +200,35 @@ if (RR) add(table(["quantity","colon","Rotterdam (descriptive)"],
   ["RMST-selected rule: P(lower HR)", f(RR.colon.rm_lowerHR,3), f(RR.rott.rm_lowerHR,3)],
   ["RMST-selected rule: P(greater RMST)", f(RR.colon.rm_moreRM,3), f(RR.rott.rm_moreRM,3)]],
  [4200, 2600, 2560],
- "Switching the decomposition to the absolute-benefit estimand changes the selected criteria almost completely and improves neither estimand out of sample."));
+ "Switching the decomposition to the absolute-benefit estimand changes the selected criteria almost completely. The point estimates for the RMST-selected variant are not higher on either estimand, but the patient-level intervals reported in the main text are wide, so this is not evidence that the switch cannot help."));
+
+add(H1("Table S3d. Three-way split: does apparent dominance carry over?"));
+add(P("Each cohort is split into three stratified thirds. The rule is fitted on the first. All 512 subsets are scored on the second and those dominating the rule are recorded. Exactly those subsets are then re-evaluated on the third, which has been used for nothing. This measures the optimism of the held-out frontier inside the real cohorts, with no generating model."));
+if (NUM.threeway) { const A = NUM.threeway.colon, B = NUM.threeway.rott;
+  add(table(["quantity","colon","Rotterdam (descriptive)"],
+   [["three-way splits", f0(A.R), f0(B.R)],
+    ["dominating subsets on the selection third (median)", f0(A.dom_sel), f0(B.dom_sel)],
+    ["dominating subsets on the test third (median)", f0(A.dom_test), f0(B.dom_test)],
+    ["rule on the frontier, selection third", f(A.front_sel,3), f(B.front_sel,3)],
+    ["rule on the frontier, test third", f(A.front_test,3), f(B.front_test,3)],
+    ["share of selection-third dominators still dominating on the test third", f(A.repro,3), f(B.repro,3)],
+    ["same, requiring the margin on the selection third", f(A.reproM,3), f(B.reproM,3)],
+    ["qualifying under the margin (median)", f0(A.dom_selM), f0(B.dom_selM)],
+    ["lowest-hazard-ratio dominator carries over", f(A.best_holds,3), f(B.best_holds,3)]],
+   [4600, 2400, 2360],
+   "A third of the cohort is a small evaluation set, so these carry-over rates are themselves uncertain; they are reported as an order of magnitude for the optimism, consistent in direction with the simulation in Table S3b."));
+}
+
+add(H1("Table S3e. Restricted-mean horizon"));
+add(P("The horizon must lie inside the observed follow-up of both arms of every candidate protocol. The table gives, at four horizons per cohort, the agreement between the hazard-ratio and restricted-mean decompositions; the share of patients still under observation at each horizon is given in the Results. The horizons used in the main text are marked."));
+if (NUM.horizon) {
+  const mk = (T, tau0) => T.map(r => [f0(r.tau) + (r.tau === tau0 ? "  (main text)" : ""),
+    f(r.same,3), f(r.jac,3), f(r.ham,2), f(r.rmF,1), f(r.rm1,1), f(r.rm2,1)]);
+  add(table(["horizon (days)","same set","Jaccard","mean Hamming","RMST: full","HR rule","RMST rule"],
+    mk(NUM.horizon.colon, NUM.horizon.tau_colon).concat(mk(NUM.horizon.rott, NUM.horizon.tau_rott)),
+    [2200, 1100, 1050, 1300, 1300, 1200, 1210],
+    "Upper block colon, lower block Rotterdam. Hamming is the number of criteria on which the two selections differ, out of six. The two decompositions disagree at every horizon tried, so the disagreement is a property of the estimands and not of the horizon; the exact agreement rate is horizon-dependent."));
+}
 
 add(H1("Table S4. Arrangement of the effect modification, total held fixed"));
 add(P("Total modification is 0.85 in every row. Rows A to C hold the diluting coefficient at 0.30 and spread the enrichment over one, two and four criteria. Row D holds the enrichment in one criterion and splits the dilution across two, halving the coefficient the rule has to detect. Entries are the probability of a lower out-of-sample hazard ratio; the scoring set is fixed at 60 000 patients."));
@@ -197,7 +240,17 @@ if (CN.A_dil1_enr1) {
     ["C  dilution in 1, enrichment in 4", "0.30"].concat(CN.C_dil1_enr4.rows.map(r=>f(r.p_lower,2))),
     ["D  dilution in 2, enrichment in 1", "0.15"].concat(CN.D_dil2_enr1.rows.map(r=>f(r.p_lower,2)))],
    [3400, 2000, 1200, 1200, 1300, 1260],
-   "Spreading the enrichment (A to C) leaves success unchanged or slightly improved; halving the diluting coefficient (A against D) reduces it from 0.85 to 0.43 at the largest size. Monte Carlo standard error is at most 0.065."));
+   "Spreading the enrichment (A to C) raises success rather than leaving it unchanged, by 0.21 with a Monte Carlo interval of [0.08, 0.34] at 6 000. Halving the diluting coefficient (A against D) reduces success from 0.85 to 0.43 at the largest size, but it also roughly halves the attainable improvement in the hazard ratio, so the coefficient and the size of the prize are confounded in this design and neither can be assigned the reduction on its own. Monte Carlo standard error is at most 0.065."));
+}
+
+add(H1("Table S4b. Success against a criterion-specific signal-to-noise ratio"));
+add(P("Four arrangements of the same total effect modification, each at three fitting sizes. The signal is the population Shapley value of the most diluting criterion; the noise is the standard deviation of its estimate at that fitting size; the scoring set is fixed at 40 000 patients. If a signal-to-noise ratio governed the requirement, cells with similar ratios would show similar success whatever the arrangement and whatever the sample size. Twelve cells cannot establish that, and this is reported as a direction rather than as evidence."));
+if (NUM.snr_curve) {
+  add(table(["arrangement / fitting size","population signal","SD of the estimate","signal-to-noise","P(lower hazard ratio)"],
+    NUM.snr_curve.cells.map(r => [["A dilution 1, enrichment 1","B dilution 1, enrichment 2","C dilution 1, enrichment 4","D dilution 2, enrichment 1"][r.arr-1] + " / " + f0(r.n),
+      f(r.phi_pop,4), f(r.sd,4), f(r.snr,2), f(r.win,2)]),
+    [3600, 1700, 1700, 1400, 1960],
+    "Spearman correlation with success: " + f(NUM.snr_curve.sp_snr,2) + " for the signal-to-noise ratio against " + f(NUM.snr_curve.sp_n,2) + " for fitting size alone, over " + NUM.snr_curve.cells.length + " cells at " + NUM.snr_curve.nrep + " replicates each. The ratio orders the cells better than sample size does, which is the direction the reviewer's suggestion predicts. It is not a demonstration: twelve cells at twenty-five replicates cannot establish a governing quantity, the ratio rises with the fitting size within every arrangement so the two are correlated by construction, and within arrangements C and D success barely moves with size at all."));
 }
 
 add(H1("Figure S3. Propensity distributions inside the full protocol"));
@@ -239,7 +292,7 @@ add(P("The conditional hazard ratio is exp(bA) = 0.6 in every stratum of Z at ev
 
 add(P("S1.4 Fractional factorial over the threshold (Table S2)", {b:true, after:70}));
 add(MONO("2^(6-2) resolution IV, generators E = ABC and F = ABD, 16 runs."));
-add(MONO("A  number of criteria p                6        vs  10"));
+add(MONO("A  number of criteria p                6        vs   8"));
 add(MONO("B  full-protocol retention             0.30     vs  0.12"));
 add(MONO("   per-criterion retention = retention^(1/p)"));
 add(MONO("C  effect modification    sparse: gamma_1 = -|g|, gamma_3 = +0.80|g|"));
@@ -263,12 +316,19 @@ add(MONO("bonus indicator  AND: E1 & E2    OR: E1 | E2    XOR: E1 xor E2"));
 add(MONO("eta = log(0.80)*A + sum_k 0.20*Z_k + g * A * bonus"));
 add(P("Under independent criteria at a common rate q the coefficients multiplying g are (1−q)² for the AND form, −(1−q)² for OR and −2(1−q)² for XOR.", {after:170}));
 
+add(P("S1.6 One primary analysis, and the checks that enforce it", {b:true, after:70}));
+add(P("Every observed-cohort point estimate quoted in this paper and in this supplement — the out-of-sample comparison in Table 1, the matched statistics at all four tolerances, the frontier and dominance counts, and the restricted-mean rule variant — is produced by a single script in one pass per cohort and written to one result file, which the manuscript reads at build time. The nested bootstrap supplies uncertainty only and never a point estimate, so the two cannot disagree.", {after:120}));
+add(MONO("colon      time, status   tau = 1825 d   500 splits"));
+add(MONO("Rotterdam  dtime, death   tau = 2555 d   400 splits"));
+add(P("Four checks run whenever the numbers are exported and stop the build if violated. Three are on the numbers: the Rotterdam endpoint must be the death time paired with the death indicator; the horizons must be 1825 and 2555 days; and the primary and nested estimates of the same quantity must agree to within what Monte Carlo variation could explain. The fourth is on the source, because a check on the numbers alone would not have caught the error that prompted it: every analysis script is scanned and the export refuses if any line pairs the relapse-free time with the death indicator, or calls a Rotterdam dataset at the colon horizon.", {after:170}));
+
 add(H1("Figure S1. Full-page study design"));
 add(P("Figure 1 of the main text at full width.", {after:120}));
 add(new Paragraph({spacing:{after:200}, alignment:AlignmentType.CENTER,
   children:[new d.ImageRun({data: fs.readFileSync("/home/claude/repo/figures/fig_design.png"),
     type:"png", transformation:{width:660, height:336}})]}));
 
+add(new Paragraph({children:[new d.PageBreak()]}));
 add(H1("Figure S2. Full-page criteria plate plot"));
 add(P("The colon criteria plate plot at full page size, reproducing Figure 6 of the main text.", {after:120}));
 add(new Paragraph({spacing:{after:100}, alignment:AlignmentType.CENTER,

@@ -147,6 +147,13 @@ excluded from the test family and hatched in the plot.
 - Interval coverage was validated at n = 1500 with B = 200 and K = 25: 0.942 for a
   null interaction, 0.908 for a non-null one. Use B ≥ 1000 and K ≥ 50 in application
   and treat intervals for large interactions as mildly anticonservative.
+- Every observed-cohort point estimate in the paper comes from `analysis/primary.R`
+  and is written to one result file that the manuscript reads at build time; the
+  nested bootstrap supplies uncertainty only. `analysis/export_numbers.R` refuses to
+  export if the Rotterdam endpoint, either horizon, or the agreement between the two
+  estimates of a quantity is wrong, or if any analysis script pairs the relapse-free
+  time with the death indicator. This guard exists because eleven scripts did exactly
+  that in an earlier revision; see `analysis/README.md`.
 
 ## References
 

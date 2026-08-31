@@ -20,7 +20,7 @@ cat("(a) Proportional hazards, Grambsch-Therneau test on the treatment term\n\n"
 cat(sprintf("%-12s %-22s %8s %8s %10s\n", "cohort", "cohort definition", "n", "events", "p (zph)"))
 for (nm in c("colon","rott")) {
   pr <- if (nm == "colon") tp_prepare(colon_data(), colon_criteria, "trt","time","status", colon_ps, tau=1825)
-        else               tp_prepare(rott_data(),  rott_criteria,  "trt","rtime","death", rott_ps, tau=1825)
+        else               tp_prepare(rott_data(),  rott_criteria,  "trt","dtime","death", rott_ps, tau=2555)
   for (which in c("whole cohort","full protocol")) {
     k <- if (which == "whole cohort") rep(TRUE, nrow(pr$E)) else ALLS(pr$E, seq_len(pr$p))
     d <- data.frame(t = pr$time[k], s = pr$status[k], a = pr$trt[k])

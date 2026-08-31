@@ -1,0 +1,15 @@
+07:20:56 A_dil1_enr1    n    800 | phi_pop +0.0240 | SD 0.0501 | SNR 0.48 | P(lower) 0.20 (25 reps) 
+07:21:03 A_dil1_enr1    n   2000 | phi_pop +0.0240 | SD 0.0284 | SNR 0.85 | P(lower) 0.28 (25 reps) 
+07:21:17 A_dil1_enr1    n   5000 | phi_pop +0.0240 | SD 0.0175 | SNR 1.37 | P(lower) 0.40 (25 reps) 
+07:21:39 B_dil1_enr2    n    800 | phi_pop +0.0241 | SD 0.0503 | SNR 0.48 | P(lower) 0.24 (25 reps) 
+07:21:46 B_dil1_enr2    n   2000 | phi_pop +0.0241 | SD 0.0317 | SNR 0.76 | P(lower) 0.28 (25 reps) 
+07:22:00 B_dil1_enr2    n   5000 | phi_pop +0.0241 | SD 0.0171 | SNR 1.40 | P(lower) 0.28 (25 reps) 
+07:22:22 C_dil1_enr4    n    800 | phi_pop +0.0243 | SD 0.0520 | SNR 0.47 | P(lower) 0.12 (25 reps) 
+07:22:29 C_dil1_enr4    n   2000 | phi_pop +0.0243 | SD 0.0223 | SNR 1.09 | P(lower) 0.40 (25 reps) 
+07:22:43 C_dil1_enr4    n   5000 | phi_pop +0.0243 | SD 0.0161 | SNR 1.51 | P(lower) 0.40 (25 reps) 
+07:23:05 D_dil2_enr1    n    800 | phi_pop +0.0082 | SD 0.0334 | SNR 0.25 | P(lower) 0.04 (25 reps) 
+07:23:13 D_dil2_enr1    n   2000 | phi_pop +0.0082 | SD 0.0301 | SNR 0.27 | P(lower) 0.04 (25 reps) 
+07:23:26 D_dil2_enr1    n   5000 | phi_pop +0.0082 | SD 0.0113 | SNR 0.73 | P(lower) 0.04 (25 reps) 
+07:23:26 
+Spearman with success: SNR 0.86 | fitting size 0.45 (12 cells) 
+07:23:26 ALL DONE 

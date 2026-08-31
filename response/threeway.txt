@@ -1,0 +1,15 @@
+03:43:06 
+===== colon : 400 three-way splits (tau = 1825) ===== 
+03:43:06   dominating subsets, median: selection third 76 | test third 73 
+03:43:06   rule on the frontier: selection third 0.025 | test third 0.043 
+03:43:06   of subsets dominating on the selection third, 0.353 still dominate on the test third 
+03:43:06   with a 0.05 margin required on the selection third: 0.347 (median 52 qualify) 
+03:43:06   the single lowest-HR dominator carries over in 0.336 of splits 
+03:55:00 
+===== Rotterdam : 300 three-way splits (tau = 2555) ===== 
+03:55:00   dominating subsets, median: selection third 56 | test third 59 
+03:55:00   rule on the frontier: selection third 0.027 | test third 0.047 
+03:55:00   of subsets dominating on the selection third, 0.414 still dominate on the test third 
+03:55:00   with a 0.05 margin required on the selection third: 0.412 (median 34 qualify) 
+03:55:00   the single lowest-HR dominator carries over in 0.394 of splits 
+03:55:00 ALL DONE 

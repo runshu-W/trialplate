@@ -62,6 +62,6 @@ run <- function(dat, crit, ps, trt, tm, st, tau, R, frac, label, seed = 11) {
 out <- list()
 out$colon <- run(colon_data(), colon_criteria, colon_ps, "trt","time","status",   1825, 300, 0.5, "colon")
 saveRDS(out, "analysis/out/random_benchmark.rds")
-out$rott  <- run(rott_data(),  rott_criteria,  rott_ps,  "trt","rtime","death",   1825, 250, 0.5, "Rotterdam")
+out$rott  <- run(rott_data(),  rott_criteria,  rott_ps,  "trt","dtime","death",   2555, 250, 0.5, "Rotterdam")
 saveRDS(out, "analysis/out/random_benchmark.rds")
 say("ALL DONE")

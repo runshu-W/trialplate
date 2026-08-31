@@ -10,7 +10,7 @@ png("analysis/out/fig_overlap.png", width = 1900, height = 760, res = 200)
 par(mfrow = c(1, 2), mar = c(4.2, 4.3, 3.0, 1.0), mgp = c(2.5, .7, 0), las = 1)
 for (nm in c("colon","rott")) {
   pr <- if (nm=="colon") tp_prepare(colon_data(), colon_criteria, "trt","time","status", colon_ps, tau=1825)
-        else             tp_prepare(rott_data(),  rott_criteria,  "trt","rtime","death", rott_ps, tau=1825)
+        else             tp_prepare(rott_data(),  rott_criteria,  "trt","dtime","death", rott_ps, tau=2555)
   k <- ALLS(pr$E, seq_len(pr$p)); tr <- pr$trt[k]
   e <- fast_logit(pr$X[k,,drop=FALSE], tr)
   br <- seq(0, 1, by = 0.05)

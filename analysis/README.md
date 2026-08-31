@@ -67,6 +67,36 @@ the halves share none. Correcting the leak narrowed the intervals.
 | `snr_check.R` | is a criterion-specific signal-to-noise ratio the better governing quantity? | R3 major 5 |
 | `colon_weighting_oos.R` | the three weighting schemes carried through the full out-of-sample evaluation | R3 minor 1 |
 
+### Added in the fourth revision
+
+| script | what it answers | reviewer point |
+|---|---|---|
+| `primary.R` | **the single source of every observed-cohort point estimate quoted anywhere in the paper**: out-of-sample comparison, matched statistics at four tolerances, frontier and dominance counts, RMST-rule variant, all in one pass per cohort | R4 major 1 |
+| `threeway.R` | fit on one third, find dominators on a second, re-evaluate them on an untouched third — the optimism of the held-out frontier measured inside the real cohorts | R4 major 3 |
+| `horizon_sweep.R` | why these restricted-mean horizons, and how criterion-set agreement and the absolute-benefit ordering move with the horizon | R4 major 6 |
+| `snr_curve.R` | success against a criterion-specific signal-to-noise ratio across arrangements and fitting sizes | R4 major 4 |
+
+The fourth review began from a main-text / supplement inconsistency that the third
+response had explained away as Monte Carlo noise. It was not. Eleven scripts had
+been written with the Rotterdam endpoint as `("rtime", "death")` at `tau = 1825` —
+the relapse-free TIME paired with the DEATH indicator, which is not a valid pair and
+systematically shortens event times — while `rule_eval.R`, behind Table 1, correctly
+used `("dtime", "death")` at `tau = 2555`. All eleven are corrected.
+
+Two guards now make this class of error fail the build rather than reach a reviewer.
+`primary.R` produces every point estimate in one place, and `export_numbers.R`
+asserts on the exported numbers (endpoint names, both horizons, agreement between the
+primary and nested estimates of the same quantity) *and* scans the source of every
+analysis script, refusing to export if any line pairs `"rtime"` with `"death"` or
+calls a Rotterdam dataset at the colon horizon. The nested bootstrap now supplies
+uncertainty only and never a point estimate.
+
+`nested_all.R` also changed in this revision: the inner Monte Carlo variance is
+estimated from the sample variance of the per-split values within each resample
+rather than assumed to be `p(1-p)/R`, which was correct only for the statistics that
+are 0/1 within a split, and interval-endpoint convergence is reported for every
+quantity rather than one.
+
 `split_dependence.R` is superseded by `nested_all.R`, which carries the same two
 promises plus everything else through one loop.
 

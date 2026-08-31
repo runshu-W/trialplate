@@ -62,5 +62,5 @@ report <- function(d, crit, ps, trt, tm, st, tau, label) {
 
 sink("analysis/out/ps_sensitivity.txt", split = TRUE)
 report(colon_data(), colon_criteria, colon_ps, "trt","time","status", 1825, "colon (randomised)")
-report(rott_data(),  rott_criteria,  rott_ps,  "trt","rtime","death", 1825, "Rotterdam (registry)")
+report(rott_data(),  rott_criteria,  rott_ps,  "trt","dtime","death", 2555, "Rotterdam (registry)")
 sink()

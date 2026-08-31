@@ -91,6 +91,6 @@ describe <- function(d, crit, ps, trt, tm, st, tau, key, label) {
 sink("analysis/out/cohort_tables.txt", split = TRUE)
 describe(colon_data(), colon_criteria, colon_ps, "trt","time","status", 1825, "colon",
          "colon: adjuvant colon-cancer trial, Lev+5FU vs observation")
-describe(rott_data(), rott_criteria, rott_ps, "trt","rtime","death", 1825, "rott",
+describe(rott_data(), rott_criteria, rott_ps, "trt","dtime","death", 2555, "rott",
          "Rotterdam: breast-cancer registry, chemotherapy vs none")
 sink()

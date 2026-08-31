@@ -154,18 +154,59 @@ if (!is.null(cv)) {
     se_null    = sqrt(m(cv$cov_bca_null)*(1-m(cv$cov_bca_null))/n2))
 }
 
+## ---- PRIMARY point estimates: the single source ---------------------------
+## Reviewer round 4, point 1: every point estimate quoted anywhere comes from
+## here, at the full split count. The nested bootstrap supplies uncertainty only.
+prm <- function(lab) {
+  z <- rd(sprintf("analysis/out/primary_%s.rds", lab)); if (is.null(z)) return(NULL)
+  M <- z$M; m <- function(k) mean(M[, k], na.rm = TRUE)
+  o <- list(R = z$R, tau = z$tau, time_var = z$time_var, status_var = z$status_var,
+            margin = z$MARGIN, bands = z$BANDS,
+            n_full = m("n_full"), n_rule = m("n_rule"), hr_full = m("hr_full"),
+            hr_rule = m("hr_rule"), rm_full = m("rm_full"), rm_rule = m("rm_rule"),
+            more = m("more"), lower = m("lower"), greater = m("greater"),
+            front_hr = m("front_hr"), front_rm = m("front_rm"), front_hrM = m("front_hrM"),
+            n_dom = m("n_dom"), n_domM = m("n_domM"),
+            same_set = m("same_set"), n_rmrule = m("n_rmrule"),
+            rmrule_lower = m("rmrule_lower"), rmrule_greater = m("rmrule_greater"),
+            se_n = sd(M[,"n_rule"] - M[,"n_full"])/sqrt(nrow(M)),
+            se_hr = sd(M[,"hr_rule"] - M[,"hr_full"])/sqrt(nrow(M)),
+            d_n = m("n_rule") - m("n_full"), d_hr = m("hr_rule") - m("hr_full"),
+            d_rm = m("rm_rule") - m("rm_full"))
+  for (b in z$BANDS) { o[[paste0("hr",b)]] <- m(paste0("hr",b))
+                       o[[paste0("rm",b)]] <- m(paste0("rm",b))
+                       o[[paste0("nm",b)]] <- m(paste0("nm",b))
+                       o[[paste0("sk",b)]] <- m(paste0("sk",b)) }
+  o
+}
+J$primary <- list(colon = prm("colon"), rott = prm("rott"))
+
 ## ---- round-3 additions ---------------------------------------------------
 nst <- function(lab) {
   z <- rd(sprintf("analysis/out/nested_%s.rds", lab)); if (is.null(z)) return(NULL)
   M <- z$M; point <- M[1, ]; boot <- M[-1, , drop = FALSE]
+  ## round 4, major 5: inner Monte Carlo variance from the sample variance of the
+  ## per-split values inside each resample, not from p(1-p)/R
+  Vb <- if (!is.null(z$V)) z$V[-1, , drop = FALSE] else NULL
+  Kb <- if (!is.null(z$K)) z$K[-1, , drop = FALSE] else NULL
   g <- function(nm) { if (!(nm %in% colnames(boot))) return(NULL)
     x <- boot[, nm]; x <- x[is.finite(x)]
-    vt <- stats::var(x); ph <- mean(x); vm <- ph*(1-ph)/z$R_IN
+    vt <- stats::var(x)
+    vm <- if (!is.null(Vb) && nm %in% colnames(Vb)) {
+            u <- Vb[, nm] / pmax(Kb[, nm], 1); mean(u[is.finite(u)])
+          } else { ph <- mean(x); ph*(1-ph)/z$R_IN }
+    ## endpoint movement between half and the full outer count
+    h <- floor(length(x)/2)
+    mv <- if (h >= 25) max(abs(stats::quantile(x[seq_len(h)], c(.025,.975)) -
+                              stats::quantile(x, c(.025,.975)))) else NA_real_
     list(point = unname(point[nm]), sd_total = sqrt(vt), sd_mc = sqrt(vm),
-         sd_outer = sqrt(max(vt - vm, 0)), ci = unname(stats::quantile(x, c(.025,.975)))) }
+         sd_outer = sqrt(max(vt - vm, 0)), conv = unname(mv),
+         ci = unname(stats::quantile(x, c(.025,.975)))) }
   out <- list(B = z$B_OUT, R = z$R_IN, bands = z$BANDS, margin = z$MARGIN,
               more = g("more"), lower = g("lower"),
               front_hr = g("front_hr"), front_rm = g("front_rm"), front_hrM = g("front_hrM"),
+              rm_same = g("rm_same"), rmrule_more = g("rmrule_more"),
+              rmrule_lower = g("rmrule_lower"), rmrule_greater = g("rmrule_greater"),
               n_dom = unname(point["n_dom"]), n_domM = unname(point["n_domM"]))
   for (b in z$BANDS) { out[[paste0("hr", b)]] <- g(paste0("rank_hr_", b))
                        out[[paste0("rm", b)]] <- g(paste0("rank_rm_", b))
@@ -174,6 +215,37 @@ nst <- function(lab) {
   out
 }
 J$nested <- list(colon = nst("colon"), rott = nst("rott"))
+
+## ---- round-4 additions ---------------------------------------------------
+tw <- rd("analysis/out/threeway.rds")
+if (!is.null(tw)) {
+  g <- function(M, nm, fn = mean) { x <- M[, nm]; unname(fn(x[is.finite(x)])) }
+  one <- function(M) list(R = nrow(M),
+    dom_sel = g(M, "n_domB", stats::median), dom_test = g(M, "n_domC", stats::median),
+    front_sel = g(M, "front_B"), front_test = g(M, "front_C"),
+    repro = g(M, "repro"), reproM = g(M, "reproM"),
+    dom_selM = g(M, "n_domBM", stats::median), best_holds = g(M, "best_holds"))
+  J$threeway <- list(colon = one(tw$colon), rott = one(tw$rott))
+}
+
+hz <- rd("analysis/out/horizon_sweep.rds")
+if (!is.null(hz)) {
+  tolist <- function(T) lapply(seq_len(nrow(T)), function(i) as.list(T[i, ]))
+  J$horizon <- list(colon = tolist(hz$colon), rott = tolist(hz$rott),
+                    tau_colon = 1825, tau_rott = 2555,
+                    risk_colon = local({ d <- colon_data()
+                      min(vapply(sort(unique(d$trt)), function(g)
+                        mean(d$time[d$trt == g] >= 1825), numeric(1))) }),
+                    risk_rott = local({ d <- rott_data()
+                      min(vapply(sort(unique(d$trt)), function(g)
+                        mean(d$dtime[d$trt == g] >= 2555), numeric(1))) }))
+}
+
+sc <- rd("analysis/out/snr_curve.rds")
+if (!is.null(sc)) {
+  J$snr_curve <- list(cells = lapply(seq_len(nrow(sc$T)), function(i) as.list(sc$T[i, ])),
+                      sp_snr = sc$sp_snr, sp_n = sc$sp_n, nrep = sc$nrep, sizes = sc$sizes)
+}
 
 fo <- rd("analysis/out/frontier_optimism.rds")
 if (!is.null(fo)) { m <- function(x) mean(x[is.finite(x)])
@@ -235,6 +307,44 @@ tojson <- function(x) {
                          return(if (length(v)==1) v else paste0("[", paste(v, collapse=","), "]")) }
   v <- ifelse(is.finite(x), formatC(x, digits = 8, format = "g"), "null")
   if (length(v) == 1) v else paste0("[", paste(v, collapse=","), "]")
+}
+## ---- consistency assertions ---------------------------------------------
+## Reviewer round 4, point 1: fail loudly rather than let two documents drift.
+chk <- function(cond, msg) if (!isTRUE(cond)) stop("consistency check failed: ", msg)
+
+## Reviewer round 4, major point 1. The failure that produced the main-text /
+## supplement divergence was a mismatched Rotterdam endpoint sitting in eleven
+## scripts at once. A check on the exported numbers alone would not have caught
+## it, so we also check the SOURCE: no analysis script may pair the relapse-free
+## time with the death indicator, and any script naming a Rotterdam tau must name
+## 2555. This runs on every export and stops the build.
+scan_scripts <- function() {
+  fs <- list.files("analysis", pattern = "[.]R$", full.names = TRUE)
+  bad <- character(0)
+  for (f in fs) {
+    ln <- readLines(f, warn = FALSE)
+    ln <- ln[!grepl("^\\s*#", ln)]                      # ignore comments
+    i1 <- grep('"rtime"\\s*,\\s*"death"', ln)
+    if (length(i1)) bad <- c(bad, sprintf("%s:%d rtime paired with death", basename(f), i1))
+    ## a Rotterdam call and a colon horizon on the same line
+    i2 <- grep("rott_(data|ps|criteria)", ln)
+    i2 <- i2[grepl("1825", ln[i2])]
+    if (length(i2)) bad <- c(bad, sprintf("%s:%d Rotterdam call at tau = 1825", basename(f), i2))
+  }
+  bad
+}
+bad <- scan_scripts()
+if (length(bad)) stop("endpoint check failed:\n  ", paste(bad, collapse = "\n  "))
+say("endpoint source check passed over ", length(list.files("analysis", pattern = "[.]R$")), " scripts")
+if (!is.null(J$primary$colon)) {
+  chk(J$primary$colon$time_var == "time" && J$primary$colon$status_var == "status",
+      "colon endpoint must be (time, status)")
+  chk(J$primary$rott$time_var == "dtime" && J$primary$rott$status_var == "death",
+      "Rotterdam endpoint must be (dtime, death), not (rtime, death)")
+  chk(J$primary$rott$tau == 2555 && J$primary$colon$tau == 1825, "tau values")
+  if (!is.null(J$nested$colon))
+    chk(abs(J$primary$colon$lower - J$nested$colon$lower$point) < 0.25,
+        "primary and nested colon P(lower) differ by more than 0.25")
 }
 writeLines(tojson(J), "analysis/out/numbers.json")
 say(sprintf("exported %d blocks", length(J)))
