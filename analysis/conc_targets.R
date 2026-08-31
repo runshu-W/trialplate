@@ -18,6 +18,7 @@ CRIT <- setNames(lapply(1:P, function(k) local({kk<-k;ct<-THR[k];function(x) x[[
 prep_of <- function(d) tp_prepare(d, CRIT, "A","t","st", paste0("V",1:P), tau=8, min_per_arm=3)
 bits <- bitwShiftL(1L, 0:(P-1)); full <- 1:P
 
+ROWS <- list()
 sink("analysis/out/conc_targets.txt", split = TRUE)
 cat("Is the detectable target the same under every arrangement? (N = 120 000)\n\n")
 cat(sprintf("%-14s %8s %10s %11s %10s %12s %s\n",
@@ -33,6 +34,11 @@ for (k in names(CONFIG)) {
   cat(sprintf("%-14s %8.2f %10.4f %11.4f %10.4f %12.3f %s\n", k, sum(abs(G)),
       exp(H[kF]), exp(H[best]), exp(H[kF])-exp(H[best]), N[kF]/nrow(pr$d),
       paste(pr$names[bs], collapse=",")))
+  ## Reviewer round 5, major point 1: these four rows were quoted in the Results as
+  ## literals because the script only ever printed them. Now saved.
+  ROWS[[k]] <- list(cfg = k, sum_g = sum(abs(G)), hr_full = exp(H[kF]),
+                     hr_oracle = exp(H[best]), gap = exp(H[kF]) - exp(H[best]),
+                     elig_frac = N[kF]/nrow(pr$d))
 }
 cat("\nThe full-protocol hazard ratio is identical by construction: under the full\n")
 cat("protocol every criterion is met, so the treated bonus is sum(gamma), which the\n")
@@ -40,3 +46,4 @@ cat("design holds at -0.25 in all four arrangements. The oracle-relaxed hazard r
 cat("and the resulting gap are NOT constrained by that and are reported above, so a\n")
 cat("reader can see how far the detectable target really is held fixed.\n")
 sink()
+saveRDS(ROWS, "analysis/out/conc_targets.rds")

@@ -74,11 +74,15 @@ verify <- function(form, qi, qj, g = -0.60, n = 40000, seed = 5) {
 sink("analysis/out/leverage_forms.txt", split = TRUE)
 cat("Leverage coefficient by interaction form and eligibility rate\n")
 cat("(coefficient multiplies the effect-modification magnitude g)\n\n")
+LF <- list()
 cat(sprintf("%-5s %6s %6s %10s %10s %10s\n","form","q_i","q_j","coef","predicted","observed"))
 for (form in c("AND","OR","XOR"))
   for (q in c(0.45, 0.70, 0.85)) {
     r <- verify(form, q, q)
     cat(sprintf("%-5s %6.2f %6.2f %10.3f %10.4f %10.4f\n", form, q, q, r["coef"], r["predicted"], r["observed"]))
+    LF[[paste(form, q)]] <- list(form = form, q = q, coef = unname(r["coef"]),
+      predicted = unname(r["predicted"]), observed = unname(r["observed"]),
+      rel_err = unname(r["predicted"]/r["observed"] - 1))
   }
 cat("\nCoefficient as criteria become permissive (independent criteria, q_ij = q_i q_j):\n")
 cat(sprintf("%6s %10s %10s %10s\n","q","AND","OR","XOR"))
@@ -100,3 +104,4 @@ cat("derivation ignores the reweighting and non-collapsibility that operate when
 cat("the bonus reaches a large share of the cohort. They are order-of-magnitude\n")
 cat("guides, not exact.\n")
 sink()
+saveRDS(LF, "analysis/out/leverage_forms_fit.rds")

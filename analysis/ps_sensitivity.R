@@ -57,10 +57,18 @@ report <- function(d, crit, ps, trt, tm, st, tau, label) {
     s <- s[is.finite(s)]
     cat(sprintf("%-4s %10.3f %10d %10.0f %8d %10d\n",
         spec, max(s), sum(s > 0.10), sum(w)^2/sum(w^2), r$n_trunc, sum(k)))
+    ## Reviewer round 5, major point 1: printed only, so the Methods quoted the
+    ## first row of each cohort as literals. Now saved.
+    PS[[paste(label, spec)]] <<- list(cohort = label, spec = spec, n = sum(fullk),
+      events = sum(pr$status[fullk]), max_smd = max(s), n_above_10 = sum(s > 0.10),
+      ess = sum(w)^2/sum(w^2), n_trunc = r$n_trunc, n_kept = sum(k),
+      ess_frac = (sum(w)^2/sum(w^2))/sum(k))
   }
 }
 
+PS <- list()
 sink("analysis/out/ps_sensitivity.txt", split = TRUE)
 report(colon_data(), colon_criteria, colon_ps, "trt","time","status", 1825, "colon (randomised)")
 report(rott_data(),  rott_criteria,  rott_ps,  "trt","dtime","death", 2555, "Rotterdam (registry)")
 sink()
+saveRDS(PS, "analysis/out/ps_specs.rds")

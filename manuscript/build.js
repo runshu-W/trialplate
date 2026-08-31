@@ -1,3 +1,9 @@
+/* Reviewer round 5, major point 1. The build refuses to produce a document if any
+ * figure in the manuscript sources is a transcribed literal rather than a value
+ * read from the analysis output. See check_numbers.js. */
+require("child_process").execFileSync(process.execPath, [__dirname + "/check_numbers.js"],
+  { stdio: "inherit", cwd: __dirname });
+
 const M = require('./make.js');
 require('./part2.js')(M);
 require('./part3.js')(M);

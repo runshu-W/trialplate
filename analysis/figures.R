@@ -53,13 +53,21 @@ points(n, pl, pch = 22, bg = OI["vermilion"], col = "white", cex = 1.4)
 ## nested resampling had just reported. They now carry their outer-bootstrap
 ## intervals, which span most of the unit interval, so the figure no longer
 ## suggests a precise agreement.
-dep <- tryCatch(readRDS("analysis/out/split_dependence.rds"), error = function(e) NULL)
-if (!is.null(dep)) {
-  ci_c <- dep$colon$lower$ci; ci_r <- dep$rott$lower$ci
-  ebar(309, ci_c[1], ci_c[2], OI["blue"]);   ebar(1491, ci_r[1], ci_r[2], OI["purple"])
-}
-points(c(309, 433), c(0.270, 0.336), pch = 23, bg = OI["blue"], col = "white", cex = 1.6)
-points(c(1491, 2088), c(0.497, 0.527), pch = 25, bg = OI["purple"], col = "white", cex = 1.4)
+## Reviewer round 5, major point 1. This panel plotted the observed values as
+## literals, and they were the pre-correction ones computed with the mismatched
+## Rotterdam endpoint, while it read its intervals from a result object that has
+## since been retired. Both now come from the primary analysis and the nested
+## bootstrap, and only the half-split points are shown because that is the split
+## the primary analysis uses.
+PRM <- readRDS("analysis/out/primary_colon.rds"); PRR_ <- readRDS("analysis/out/primary_rott.rds")
+NSC <- readRDS("analysis/out/nested_colon.rds"); NSR <- readRDS("analysis/out/nested_rott.rds")
+obs_pt <- function(z) mean(z$M[, "lower"], na.rm = TRUE)
+obs_ci <- function(z) { x <- z$M[-1, "lower"]; unname(stats::quantile(x[is.finite(x)], c(.025, .975))) }
+n_fit_c <- floor(0.5 * 619); n_fit_r <- floor(0.5 * 2982)
+cc <- obs_ci(NSC); cr <- obs_ci(NSR)
+ebar(n_fit_c, cc[1], cc[2], OI["blue"]); ebar(n_fit_r, cr[1], cr[2], OI["purple"])
+points(n_fit_c, obs_pt(PRM), pch = 23, bg = OI["blue"],   col = "white", cex = 1.6)
+points(n_fit_r, obs_pt(PRR_), pch = 25, bg = OI["purple"], col = "white", cex = 1.4)
 legend("bottomright", bty = "n", cex = .72,
   legend = c("more patients (simulated)", "lower hazard ratio (simulated)",
              "randomised cohort, observed", "registry cohort, observed"),
@@ -87,9 +95,20 @@ tab <- readRDS("analysis/out/confound_table.rds")
 R_CF <- 250
 arms <- unique(tab$arm)
 CL <- c(OI["blue"], OI["orange"], OI["vermilion"]); LT <- c(1, 2, 4); PC <- c(21, 22, 24)
-LIMIT <- c(0.0310, 0.0327, 0.0408)          # population limit of the estimated gap
-HRFULL <- c(0.6637, 0.6600, 0.7569)
-RECOV <- c(0.280, 0.180, 0.116)             # exact recovery at n = 5167
+## Reviewer round 5, major point 1. These three values were typed in here and
+## again in the Results, from a run that no longer matches the script in the
+## repository. Both now read the same result file.
+LIMIT <- local({
+  z <- tryCatch(readRDS("analysis/out/confound_limits.rds"), error = function(e) NULL)
+  if (is.null(z)) stop("run analysis/confound_limits.R first: figures must not carry literals")
+  unname(z[, "gap"])
+})
+HRFULL <- local({
+  z <- readRDS("analysis/out/confound_limits.rds"); unname(z[, "hr_full"])
+})
+RECOV <- local({                            # exact recovery at n = 5167, from the table
+  vapply(arms, function(a) tab$rec[tab$arm == a & tab$n == 5167][1], numeric(1))
+})
 
 png("analysis/out/fig_confound.png", width = 1900, height = 800, res = 200)
 par(mfrow = c(1, 3), mar = c(4.2, 4.3, 3.0, 0.8), mgp = c(2.5, .7, 0), las = 1)
@@ -116,7 +135,7 @@ bp <- barplot(LIMIT, col = CL, border = "white", names.arg = c("A", "B", "C"), y
 abline(h = LIMIT[1], col = GREY, lty = 3)
 text(bp, LIMIT + max(LIMIT)*.06, sprintf("%.4f", LIMIT), cex = .8)
 text(bp, LIMIT/2, sprintf("HR %.3f", HRFULL), cex = .66, col = "white")
-mtext("Unmeasured confounding INFLATES it by 32%", 3, line = 1.3, cex = .78, font = 2)
+mtext(sprintf("Unmeasured confounding INFLATES it by %.0f%%", 100*(LIMIT[3]/LIMIT[1] - 1)), 3, line = 1.3, cex = .78, font = 2)
 mtext("the true causal gap is IDENTICAL in all three arms", 3, line = .25, cex = .58, col = GREY)
 
 ## panel 3: recovery falls while apparent reliability does not
@@ -124,7 +143,9 @@ bp <- barplot(RECOV, col = CL, border = "white", names.arg = c("A", "B", "C"), y
   ylab = "P(exactly the right criterion set) at n = 5167")
 text(bp, RECOV + max(RECOV)*.06, sprintf("%.3f", RECOV), cex = .8)
 mtext("and the selection actually gets WORSE", 3, line = 1.3, cex = .78, font = 2)
-mtext("0.937 / 0.808 / 0.936 apparent reliability against this", 3, line = .25, cex = .58, col = GREY)
+mtext(paste(sprintf("%.3f", vapply(arms, function(a) tab$p[tab$arm == a & tab$n == 5167][1], numeric(1))),
+            collapse = " / "), 3, line = .25, cex = .58, col = GREY)
+mtext("apparent reliability at n = 5167 against this", 3, line = -0.4, cex = .5, col = GREY)
 dev.off(); say("fig_confound.png written")
 
 ## ================= Figure 5 : non-collapsibility sweep =================

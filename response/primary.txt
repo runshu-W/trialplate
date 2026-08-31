@@ -1,0 +1,19 @@
+08:31:17 
+===== colon : 500 splits, endpoint (time, status), tau = 1825 ===== 
+08:31:17   full protocol  : n 88 | HR 0.6063 | RMST +69.2 
+08:31:17   rule protocol  : n 149 | HR 0.6734 | RMST +67.8 
+08:31:17   P(more) 0.988 | P(lower HR) 0.290 | P(greater RMST) 0.508 
+08:31:17   matched HR  2%:0.620  5%:0.639  10%:0.634  15%:0.626 
+08:31:17   matched RMST 2%:0.394  5%:0.414  10%:0.411  15%:0.405 
+08:31:17   frontier HR 0.030 | RMST 0.002 | margin 0.114 | dominating 117 (margin 90) 
+08:31:17   RMST-rule: same set 0.070 | n 182 | P(lower HR) 0.152 | P(greater RMST) 0.532 
+08:41:26 
+===== rott : 400 splits, endpoint (dtime, death), tau = 2555 ===== 
+08:41:26   full protocol  : n 210 | HR 0.7283 | RMST +151.1 
+08:41:26   rule protocol  : n 435 | HR 0.7329 | RMST +156.5 
+08:41:26   P(more) 1.000 | P(lower HR) 0.522 | P(greater RMST) 0.580 
+08:41:26   matched HR  2%:0.548  5%:0.561  10%:0.571  15%:0.585 
+08:41:26   matched RMST 2%:0.556  5%:0.576  10%:0.590  15%:0.605 
+08:41:26   frontier HR 0.010 | RMST 0.025 | margin 0.072 | dominating 85 (margin 64) 
+08:41:26   RMST-rule: same set 0.207 | n 435 | P(lower HR) 0.512 | P(greater RMST) 0.590 
+08:41:26 ALL DONE 

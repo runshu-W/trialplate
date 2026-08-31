@@ -14,6 +14,7 @@ source("analysis/_setup.R")
 suppressPackageStartupMessages(library(survival))
 ALLS <- function(E, S) { r <- E[, S[1]]; for (j in S[-1]) r <- r & E[, j]; r }
 
+PH <- list()
 sink("analysis/out/ph_and_weights.txt", split = TRUE)
 
 cat("(a) Proportional hazards, Grambsch-Therneau test on the treatment term\n\n")
@@ -27,6 +28,10 @@ for (nm in c("colon","rott")) {
     f <- survival::coxph(Surv(t, s) ~ a, data = d)
     z <- survival::cox.zph(f)
     cat(sprintf("%-12s %-22s %8d %8d %10.4f\n", nm, which, sum(k), sum(d$s), z$table["a","p"]))
+    ## Reviewer round 5, major point 1: printed only, so the Methods quoted these
+    ## p-values as literals. Now saved with everything else.
+    PH[[paste(nm, which)]] <- list(cohort = nm, definition = which,
+      n = sum(k), events = sum(d$s), p = unname(z$table["a","p"]))
   }
 }
 cat("\n  A small p indicates the hazard ratio is not constant over follow-up. Where\n")
@@ -68,3 +73,4 @@ for (lab in names(schemes)) {
 cat("\n  If the three rows agree, the selection and the headline hazard ratios do not\n")
 cat("  depend on estimating a propensity model in the randomised cohort.\n")
 sink()
+saveRDS(PH, "analysis/out/ph_tests.rds")

@@ -1,0 +1,68 @@
+Fifth revision: enforce the single-source claim with a build guard, and fix what it found
+
+The fourth cover letter claimed every figure in the paper is generated from one
+result file. That claim was false, and the reviewer was right to test it. Results
+section 2 quoted two probabilities as typed literals; the Methods quoted three
+weighting probabilities the same way; and two superseded result objects were still
+being read by the supplement, one of them produced before the Rotterdam endpoint
+correction. A claim of that kind has to be enforced by the build.
+
+manuscript/check_numbers.js (new) scans every double-quoted string in all five
+document sources and fails the build on any decimal or percentage that is not a
+whitelisted design constant. It runs as the first step of build.js. On first run it
+found 84 transcribed figures, far more than the review identified.
+
+What the guard found, beyond the reviewer's list:
+- a Figure 4 caption claiming the estimator's population limit is inflated by 32%
+  under unmeasured confounding; recomputed from the script actually in the
+  repository it is 8.6%, and 32% came from a parameterisation that no longer exists
+- the leverage over-prediction for the OR and XOR forms stated as 10-30%; it is
+  11-44%
+- Supplement Tables S1, S1b, S1c and S2b typed by hand
+- Figure 3 plotting the pre-correction Rotterdam values while reading its intervals
+  from a retired result object
+- Table S1c dividing an already-normalised truncation fraction by n a second time
+- "its Shapley value is negative throughout", contradicted by the zero-heterogeneity
+  cell it cites, which is positive
+- a missing Figure 2: the main text ran 1, 3, 4, 5, 6 after a figure was dropped
+
+Structural changes:
+- five superseded result objects moved to analysis/out/superseded/ with a note on
+  why each was retired; export_numbers.R refuses to run if any reappears
+- Supplement Table S3c deleted; the RMST-rule variant is reported once, in Table S3
+- strat_split() moved into analysis/_setup.R so every script shares one split
+  function; the weighting sensitivity and the horizon sweep now run at the primary
+  analysis's seed and split count, and export_numbers.R asserts their overlapping
+  cells reproduce the primary values exactly
+- one interval procedure for the whole paper: the 95% percentile interval of the
+  outer bootstrap distribution. No interval is formed from a standard deviation
+  multiplier
+- confound_limits.R (new) computes the three population gap limits that had been
+  typed into both figures.R and the Results
+
+Estimands separated, per major point 3:
+The three-way split conflated a replication rate with a fresh scan of the test
+third. They are now three named quantities, and only the second is confirmatory.
+This changes a headline: judged against comparator subsets fixed on separate data
+before evaluation, the rule is left undominated in 21.0% of colon and 12.0% of
+Rotterdam splits, against 3.0% and 1.0% on the empirical reading. The qualitative
+finding survives, but quoting only the empirical figure overstates the shortfall by
+a factor of several. The abstract, Results, Discussion and Conclusions now carry
+both, with the confirmatory one identified as the out-of-sample statement.
+
+Claims corrected:
+- the RMST-selected variant is no longer described as "not higher on either
+  estimand", which its own point estimates contradict; it shows no clear or
+  consistent advantage, with intervals establishing neither superiority nor
+  equivalence
+- the leftover "Table 2 read as a family of conditional reliability curves"
+  sentence is deleted
+- the pooled SNR correlation is reported with its within- and between-arrangement
+  decomposition, since the pooled figure is confounded by construction
+- the 0.05 margin is called an investigator-chosen sensitivity margin throughout
+- Hamming distance is out of nine criteria, not six
+
+Verification: a clean rebuild from the stored result objects through to the three
+documents, with the guard and assertion output, is in manuscript/clean_build_log.txt.
+Rerunning primary.R reproduced every previously reported value bit for bit in both
+cohorts. The guard does not test bare integers; those were checked by hand.

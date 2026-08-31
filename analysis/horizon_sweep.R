@@ -24,7 +24,7 @@ at_risk <- function(d, tm, st, trt, taus) {
   }
 }
 
-agree <- function(dat, crit, ps, trt, tm, st, taus, R, label, seed = 71) {
+agree <- function(dat, crit, ps, trt, tm, st, taus, R, label, seed) {
   say(sprintf("\n===== %s =====", label))
   say(sprintf("  maximum observed follow-up %.0f d; median %.0f d",
               max(dat[[tm]]), stats::median(dat[[tm]])))
@@ -34,7 +34,7 @@ agree <- function(dat, crit, ps, trt, tm, st, taus, R, label, seed = 71) {
     set.seed(seed); n <- nrow(dat)
     M <- .tp_lapply(seq_len(R), function(r) {
       set.seed(seed * 1000 + r)
-      ix <- sample(n, floor(0.5 * n))
+      ix <- strat_split(dat, trt, st, 0.5)
       Vf <- tryCatch(tp_enumerate(tp_prepare(dat[ix, , drop=FALSE], crit, trt, tm, st, ps, tau = tau)),
                      error = function(e) NULL)
       if (is.null(Vf) || any(Vf[, "feasible"] == 0)) return(NULL)
@@ -64,10 +64,15 @@ agree <- function(dat, crit, ps, trt, tm, st, taus, R, label, seed = 71) {
 }
 
 out <- list()
+## Reviewer round 5, major point 1. The sweep ran at its own seed and split count,
+## so its row at the main horizon was a SECOND estimate of a quantity the primary
+## analysis already reports, and the two disagreed by Monte Carlo alone. It now uses
+## the primary run's seed, split count and stratified split, so the main-horizon row
+## reproduces the primary value exactly and the sweep shows only the horizon trend.
 out$colon <- agree(colon_data(), colon_criteria, colon_ps, "trt","time","status",
-                   c(1095, 1460, 1825, 2190), 200, "colon")
+                   c(1095, 1460, 1825, 2190), 500, "colon", seed = 101)
 saveRDS(out, "analysis/out/horizon_sweep.rds")
 out$rott  <- agree(rott_data(), rott_criteria, rott_ps, "trt","dtime","death",
-                   c(1825, 2190, 2555, 2920), 150, "Rotterdam")
+                   c(1825, 2190, 2555, 2920), 400, "Rotterdam", seed = 101)
 saveRDS(out, "analysis/out/horizon_sweep.rds")
 say("ALL DONE")

@@ -35,11 +35,21 @@ describe <- function(d, crit, ps, trt, tm, st, tau, key, label) {
     cat(sprintf("%-7s %-30s %8.3f %8.3f %9d %8d %8d\n",
         nm[i], LABEL[[key]][nm[i]], raw[i], mis[i],
         sum(pr$status[k]), sum(pr$trt[k] == 1), sum(pr$trt[k] == 0)))
+    ## Reviewer round 5: Supplement Table S1 was a typed copy of this table.
+    ## It is now saved and the supplement reads it.
+    ROWS[[length(ROWS) + 1L]] <<- list(cohort = key, code = nm[i],
+      definition = unname(LABEL[[key]][nm[i]]), eligible = unname(raw[i]),
+      missing = unname(mis[i]), events = sum(pr$status[k]),
+      treated = sum(pr$trt[k] == 1), control = sum(pr$trt[k] == 0))
   }
   fullk <- ALLS(E, seq_len(p))
   cat(sprintf("\nFULL protocol: retains %d (%.1f%%), events %d, treated %d, control %d\n",
               sum(fullk), 100*mean(fullk), sum(pr$status[fullk]),
               sum(pr$trt[fullk]==1), sum(pr$trt[fullk]==0)))
+  HEAD[[key]] <<- list(cohort = key, label = label, n = nrow(d), treated = sum(pr$trt),
+    events = sum(pr$status), full_n = sum(fullk), full_frac = mean(fullk),
+    full_events = sum(pr$status[fullk]), full_treated = sum(pr$trt[fullk]==1),
+    full_control = sum(pr$trt[fullk]==0))
 
   cat("\npairwise correlation of the eligibility indicators (phi):\n")
   C <- suppressWarnings(cor(E + 0))
@@ -88,9 +98,11 @@ describe <- function(d, crit, ps, trt, tm, st, tau, key, label) {
   invisible(NULL)
 }
 
+ROWS <- list(); HEAD <- list()
 sink("analysis/out/cohort_tables.txt", split = TRUE)
 describe(colon_data(), colon_criteria, colon_ps, "trt","time","status", 1825, "colon",
          "colon: adjuvant colon-cancer trial, Lev+5FU vs observation")
 describe(rott_data(), rott_criteria, rott_ps, "trt","dtime","death", 2555, "rott",
          "Rotterdam: breast-cancer registry, chemotherapy vs none")
 sink()
+saveRDS(list(rows = ROWS, head = HEAD), "analysis/out/cohort_table_rows.rds")

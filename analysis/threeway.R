@@ -50,13 +50,26 @@ run <- function(dat, crit, ps, trt, tm, st, tau, R, label, seed = 41) {
     }
     dB <- domset(B); dC <- domset(C)
     nB <- sum(dB)
-    ## of the subsets that dominate on B, how many also dominate on C?
+    ## Reviewer round 5, major point 3. Three different quantities live here and the
+    ## previous version mixed them. They are kept apart from now on:
+    ##   (a) dB  -- subsets that dominate on the SELECTION third. An empirical,
+    ##       optimistic set, chosen on the same data that judged them.
+    ##   (b) dC[dB] -- of exactly those, the ones that still dominate on the TEST
+    ##       third. This is the only CONFIRMATORY quantity here: the subsets were
+    ##       fixed before the test third was touched.
+    ##   (c) dC -- a fresh scan of all 512 subsets on the TEST third. This is a
+    ##       second empirical oracle, not an honest evaluation, and its counts are
+    ##       NOT the survivors in (b). Reported as descriptive only.
     repro <- if (nB) mean(dC[dB]) else NA_real_
+    ## the confirmatory analogue of frontier membership: is the rule left
+    ## undominated by every subset that was pre-selected without seeing the test third?
+    front_conf <- if (nB) as.numeric(!any(dC[dB])) else 1
     ## a margin applied on B only, to see whether it selects dominators that last
     dBM <- B$ok & B$N >= B$N[kR] & B$H <= B$H[kR] - MARGIN
     reproM <- if (sum(dBM)) mean(dC[dBM]) else NA_real_
-    c(n_domB = nB, n_domC = sum(dC),
+    c(n_domB = nB, n_domC = sum(dC), n_survive = if (nB) sum(dC[dB]) else 0,
       front_B = as.numeric(!any(dB)), front_C = as.numeric(!any(dC)),
+      front_conf = front_conf,
       repro = repro, reproM = reproM, n_domBM = sum(dBM),
       ## the rule looks beaten on B; does the single best B-dominator still beat
       ## the rule on C?
@@ -71,8 +84,11 @@ run <- function(dat, crit, ps, trt, tm, st, tau, R, label, seed = 41) {
   say(sprintf("\n===== %s : %d three-way splits (tau = %d) =====", label, nrow(M), tau))
   say(sprintf("  dominating subsets, median: selection third %.0f | test third %.0f",
               md("n_domB"), md("n_domC")))
-  say(sprintf("  rule on the frontier: selection third %.3f | test third %.3f",
-              m("front_B"), m("front_C")))
+  say(sprintf("  (a) rule undominated on the selection third (empirical)        : %.3f", m("front_B")))
+  say(sprintf("  (b) rule undominated by the PRE-SELECTED set on the test third  : %.3f  <- confirmatory", m("front_conf")))
+  say(sprintf("  (c) rule undominated on a fresh scan of the test third (descr.) : %.3f", m("front_C")))
+  say(sprintf("      surviving dominators, median %.0f of %.0f pre-selected",
+              md("n_survive"), md("n_domB")))
   say(sprintf("  of subsets dominating on the selection third, %.3f still dominate on the test third",
               m("repro")))
   say(sprintf("  with a %.2f margin required on the selection third: %.3f (median %.0f qualify)",

@@ -6,8 +6,8 @@ const { Document, Packer, Paragraph, TextRun, AlignmentType,
 const CN  = "Noto Serif CJK SC";
 const CNB = "Noto Sans CJK SC";
 const NUM = JSON.parse(fs.readFileSync("/home/claude/repo/analysis/out/numbers.json","utf8"));
-const FA = NUM.factorial, BY = FA.by, RB = NUM.random, DP = NUM.dependence,
-      RC = NUM.recovery, E = NUM.efficiency, PA = NUM.pareto, CONC = NUM.concentration,
+const FA = NUM.factorial, BY = FA.by,
+      RC = NUM.recovery, E = NUM.efficiency, CONC = NUM.concentration,
       FX = NUM.fixedn || {};
 const PR = NUM.primary || {}, C = PR.colon || {}, RT = PR.rott || {},
       NS = NUM.nested || {}, FO = NUM.frontier_opt || null,
@@ -102,7 +102,7 @@ add(SUB("1. 「多纳入病人」主要是构造性的；规则很少落在经�
 add(P("500 次划分里，合格人数的最小差值恰好是 0，从不为负——这正是子集关系决定的。文献一直在报的那个 0.978「承诺兑现率」，衡量的是规则移除起约束作用的标准的频率，而不是移除得对不对。"));
 add(P("公平的对照是把**全部 512 个子集**都在留出的那一半上评分（第一轮用「随机去掉同样条数」不公平，因为两者纳入的人数差很多）。在合格人数相差 10% 以内的子集中，规则的风险比更低的比例是 " + pct(C["hr0.1"]) + "（colon）和 " + pct(RT["hr0.1"]) + "（Rotterdam）" + (NS.colon ? "，病人层面的区间分别是 [" + f(Math.max(0,C["hr0.1"]-1.96*NS.colon["hr0.1"].sd_outer),2) + ", " + f(Math.min(1,C["hr0.1"]+1.96*NS.colon["hr0.1"].sd_outer),2) + "] 和 [" + f(Math.max(0,RT["hr0.1"]-1.96*NS.rott["hr0.1"].sd_outer),2) + ", " + f(Math.min(1,RT["hr0.1"]+1.96*NS.rott["hr0.1"].sd_outer),2) + "]" : "") + "；在 RMST 上是 " + pct(C["rm0.1"]) + " 和 " + pct(RT["rm0.1"]) + "。**所有这些区间都包含 0.5**——既证不出优势，也证不出没有优势。这是我们第三轮之后最重要的一处措辞改动。"));
 add(P("前沿分析：如果存在另一个子集，纳入人数不少于规则、风险比不高于规则，就说规则被支配了。规则**落在前沿上的比例只有 " + pct(C.front_hr) + " 和 " + pct(RT.front_hr) + "**，中位有 " + f0(C.n_dom) + " 和 " + f0(RT.n_dom) + " 个子集支配它。"));
-add(P("但审稿人第三轮指出：这个前沿是**在同一批留出数据上从 512 个带噪声的估计里挑最优挑出来的**，带「胜者诅咒」式的乐观偏倚。真值已知的模拟给出量级：表面支配者里只有 " + (FO?pct(FO.true_frac):"—") + " 在总体上真的支配，" + (FO?pct(FO.repro):"—") + " 能在另一半独立数据上重现。" + (TW ? "第四轮我们又在真实队列里做了**三分法**（一份拟合、一份挑支配者、一份完全没用过的做检验）：colon 中位 " + f0(TW.colon.dom_sel) + " 个表面支配者里，只有 " + pct(TW.colon.repro) + " 在没用过的那份上仍然支配；不过规则落在前沿上的比例本身变化不大（" + pct(TW.colon.front_sel) + " → " + pct(TW.colon.front_test) + "）。" : "") + "所以现在的说法是：规则离**这个带乐观偏倚的经验最优**有相当距离；它离真正的最优方案有多远，这两个队列答不了。"));
+add(P("但审稿人第三轮指出：这个前沿是**在同一批留出数据上从 512 个带噪声的估计里挑最优挑出来的**，带「胜者诅咒」式的乐观偏倚。真值已知的模拟给出量级：表面支配者里只有 " + (FO?pct(FO.true_frac):"—") + " 在总体上真的支配，" + (FO?pct(FO.repro):"—") + " 能在另一半独立数据上重现。" + (TW ? "第四轮我们又在真实队列里做了**三分法**。第五轮审稿要求把三个量分开：(a) 挑选那一份上的支配者，是乐观的经验量；(b) **把这些预先选定的子集拿到没用过的那一份上重新评价，这是唯一的确证量**——colon 只有 " + pct(TW.colon.repro) + " 仍然支配，规则未被任何预选子集支配的比例是 " + pct(TW.colon.front_conf) + "（Rotterdam " + pct(TW.rott.front_conf) + "），比经验口径的 " + pct(C.front_hr) + "／" + pct(RT.front_hr) + " 高好几倍；(c) 在检验那一份上重新扫描全部 512 个子集，仍然是经验最优，只作描述。方向不变（大多数划分里规则仍被支配），但只报 (a) 会把差距夸大。" : "") + "所以现在的说法是：规则离**这个带乐观偏倚的经验最优**有相当距离；它离真正的最优方案有多远，这两个队列答不了。"));
 
 add(SUB("2. 疗效估计这条承诺：观察到的比例偏低，但这既不能说明没守住，也不能说明守住了"));
 add(TBL(["样本外对比","colon (n=619)","Rotterdam (n=2982)"],
@@ -110,10 +110,10 @@ add(TBL(["样本外对比","colon (n=619)","Rotterdam (n=2982)"],
   ["多纳入人数","+"+f0(C.d_n),"+"+f0(RT.d_n)],
   ["风险比之差；P(更低)",(C.d_hr>0?"+":"")+f(C.d_hr,3)+"；"+f(C.lower,3),(RT.d_hr>0?"+":"")+f(RT.d_hr,3)+"；"+f(RT.lower,3)],
   ["RMST 之差；P(更大)",(C.d_rm>0?"+":"")+f(C.d_rm,1)+" 天；"+f(C.greater,3),(RT.d_rm>0?"+":"")+f(RT.d_rm,1)+" 天；"+f(RT.greater,3)],
-  ["P(更低) 的 95% 区间","[" + f(DP.colon.ci_lower[0],2) + ", " + f(DP.colon.ci_lower[1],2) + "]",
-                          "[" + f(DP.rott.ci_lower[0],2) + ", " + f(DP.rott.ci_lower[1],2) + "]"]],
+  ["P(更低) 的 95% 区间","[" + f(NS.colon.lower.ci[0],2) + ", " + f(NS.colon.lower.ci[1],2) + "]",
+                          "[" + f(NS.rott.lower.ci[0],2) + ", " + f(NS.rott.lower.ci[1],2) + "]"]],
  [2900,2300,2300],
- "最后一行来自嵌套自助（" + DP.colon.B + " 次外层重抽 × " + DP.colon.R_IN + " 次内层划分）。第二轮审稿指出我们原来的实现有泄漏：自助样本里同一个病人的多个副本可能被分到划分的两侧。改成按病人 ID 划分后区间反而变窄了。跨划分标准误 " + f(DP.colon.naive_lower,4) + "，其中真正的跨队列成分是 " + f(DP.colon.between_lower,3) + "——是前者的 **" + f(DP.colon.ratio_between_lower,0) + " 倍**。"));
+ "最后一行来自嵌套自助（" + NS.colon.B + " 次外层重抽 × " + NS.colon.R + " 次内层划分），也是全文唯一的区间口径：外层自助分布的 95% 百分位区间。第二轮审稿指出原实现有泄漏——自助样本里同一病人的副本可能落到划分两侧；改成按病人 ID 划分后区间反而变窄。总标准差 " + f(NS.colon.lower.sd_total,3) + " 中，内层蒙特卡洛成分 " + f(NS.colon.lower.sd_mc,3) + "、外层抽样成分 " + f(NS.colon.lower.sd_outer,3) + "。"));
 add(P("区间几乎覆盖了整个取值范围：colon 这个队列分不清「十次里有九次守住」和「一次都守不住」。" + f(C.lower,3) + " 和 " + f(RT.lower,3) + " 是这两个数据集的性质，不是对方法成功率的估计；**用它们下「承诺没守住」的判断是过头的**，第四轮审稿在这点上是对的，全文已改。"));
 
 add(SUB("3. 关键不是队列多大——但关键到底是什么，我们说不出来"));
@@ -160,7 +160,7 @@ add(P("它不是在说 Trial Pathfinder 错了。原文的做法在它自己的�
 /* ---------------------------------------------------------------- 8 */
 add(H("八、可能会被问到的三个问题"));
 add(SUB("既然规则在入组上不优于随机放宽，那它的价值在哪里？"));
-add(P("因为入组人数通常不是唯一目的。随机放宽确实能多招人，但招进来的人群里疗效估计会更差（colon 平均风险比 " + f(RB.colon.hr_rand,3) + " vs 规则的 " + f(RB.colon.hr_rule,3) + "，Rotterdam " + f(RB.rott.hr_rand,3) + " vs " + f(RB.rott.hr_rule,3) + "）。规则换来的可能是估计质量，代价是比它能做到的少招一些人。需要说清楚的是：在**相同入组人数**下它是否仍有这个优势，这两个队列的规模判不出来（区间都包含 0.5）。我们认为这个取舍值得明确报告，而只跟完整方案比时它不会显现出来。"));
+add(P("因为入组人数通常不是唯一目的。规则换来的可能是估计质量，代价是比它能做到的少招一些人。但需要说清楚：在**相同入组人数**下它是否仍有这个优势，这两个队列的规模判不出来（区间都包含 0.5）。我们认为这个取舍值得明确报告，而只跟完整方案比时它不会显现出来。"));
 add(SUB("实际操作上我该怎么做？"));
 add(P("四步。（1）先把出于安全性、耐受性、给药可行性、药理考虑的标准标记为**不可放宽**。（2）看结局之前先算交互杠杆和逻辑蕴含。（3）检查完整方案内部的正性/重叠。（4）判断方案里有没有一条标准集中了足够差异获益；没有的话，就只报告人群扩大，不报告疗效改善。"));
 

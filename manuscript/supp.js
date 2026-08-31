@@ -4,7 +4,10 @@ const {Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, Table,
 const fs = require('fs');
 const NUM = JSON.parse(fs.readFileSync("/home/claude/repo/analysis/out/numbers.json","utf8"));
 const FA = NUM.factorial || {}, CN = NUM.concentration || {}, PA = NUM.pareto || {}, FX = (NUM.fixedn||{}).cells || {};
-const PR = NUM.primary || {}, NS = NUM.nested || {}, FO = NUM.frontier_opt || null, RR = NUM.rmst_rule || null, SNR = NUM.snr || null, CW = NUM.colon_wt || null;
+const TG = NUM.targets || null;
+const CRIT = NUM.criteria || null, OVL = NUM.overlap || null, PSX = NUM.ps_specs || null;
+const CFACT = NUM.cohort_facts || null, CD = NUM.conc_diff || null;
+const PR = NUM.primary || {}, NS = NUM.nested || {}, FO = NUM.frontier_opt || null;
 const f = (x,k=3) => (x===null||x===undefined||Number.isNaN(x)) ? "—" : Number(x).toFixed(k);
 const f0 = x => f(x,0);
 const W = 9360;
@@ -45,60 +48,60 @@ add(new Paragraph({spacing:{after:240}, children:[new TextRun({
 /* ---------------- Table S1 ---------------- */
 add(H1("Table S1. Criteria, eligibility, missingness and retained information"));
 add(P("Marginal eligibility is computed before the missing-as-eligible convention is applied. Events and patients retained are those meeting that criterion alone. The full protocol row is the intersection of all nine."));
-add(P("colon: adjuvant colon-cancer trial, Lev+5FU vs observation (n = 619, 304 treated, 291 events)", {b:true, after:80, size:19}));
-add(table(["code","definition","eligible","missing","events kept","treated","control"],
-[["AGE75","age ≤ 75","0.937","0.000","275","287","293"],
- ["AGE40","age ≥ 40","0.918","0.000","266","278","290"],
- ["NOOBS","no bowel obstruction","0.811","0.000","231","250","252"],
- ["NOPRF","no perforation","0.973","0.000","282","296","306"],
- ["NOADH","not adherent to adjacent organs","0.861","0.000","242","265","268"],
- ["DIFF12","differentiation ≤ 2","0.825","0.021","230","250","263"],
- ["EXT13","extent ≤ 3","0.950","0.000","272","293","295"],
- ["SURG0","short interval since surgery","0.730","0.000","201","228","224"],
- ["NOD4","fewer than 4 positive nodes","0.732","0.000","177","225","228"],
- ["FULL","all nine applied","0.284","—","56","89","87"]],
-[900,2860,1000,900,1200,1250,1250],
-"Maximum absolute off-diagonal correlation among the eligibility indicators: 0.250 (NOADH with EXT13)."));
-
-add(P("Rotterdam: breast-cancer registry, chemotherapy vs none (n = 2982, 580 treated, 1272 events)", {b:true, after:80, size:19}));
-add(table(["code","definition","eligible","missing","events kept","treated","control"],
-[["AGE70","age ≤ 70","0.861","0.000","1017","578","1990"],
- ["AGE30","age ≥ 30","0.989","0.000","1257","569","2381"],
- ["ND9","nodes ≤ 9","0.910","0.000","1069","508","2207"],
- ["NDPOS","nodes ≥ 1","0.518","0.000","877","580","966"],
- ["SZ50","tumour size ≤ 50 mm","0.898","0.000","1060","502","2176"],
- ["ERP","ER ≥ 10","0.764","0.000","949","443","1835"],
- ["PGRP","PgR ≥ 10","0.681","0.000","823","428","1603"],
- ["YR85","enrolled ≥ 1985","0.873","0.000","1022","502","2101"],
- ["YR90","enrolled ≤ 1990","0.758","0.000","1068","427","1832"],
- ["FULL","all nine applied","0.141","—","191","203","216"]],
-[900,2860,1000,900,1200,1250,1250],
-"Maximum absolute off-diagonal correlation: 0.572 (ERP with PGRP); also ND9 with NDPOS at −0.30 and SZ50 with NDPOS at −0.23. Rotterdam has no missingness on any criterion variable."));
+/* Reviewer round 5. This table was a typed copy of analysis/out/cohort_tables.txt.
+   It is now generated from the same result file as everything else. */
+if (CRIT) {
+  const blk = (key, esc) => {
+    const H = CRIT.head[key], rows = CRIT.rows.filter(r => r.cohort === key);
+    add(P(H.label + " (n = " + f0(H.n) + ", " + f0(H.treated) + " treated, " + f0(H.events) + " events)",
+          {b:true, after:80, size:19}));
+    add(table(["code","definition","eligible","missing","events kept","treated","control"],
+      rows.map(r => [r.code, r.definition, f(r.eligible,3), f(r.missing,3),
+                     f0(r.events), f0(r.treated), f0(r.control)])
+        .concat([["FULL","all nine applied", f(H.full_frac,3), "\u2014",
+                  f0(H.full_events), f0(H.full_treated), f0(H.full_control)]]),
+      [900,2860,1000,900,1200,1250,1250], esc));
+  };
+  blk("colon", "Maximum absolute off-diagonal correlation among the eligibility indicators: " +
+      (CFACT && CFACT.colon ? f(Math.abs(CFACT.colon.max_cor),3) + " (" + CFACT.colon.max_cor_pair + ")" : "\u2014") + ".");
+  blk("rott", "Maximum absolute off-diagonal correlation: " +
+      (CFACT && CFACT.rott ? f(Math.abs(CFACT.rott.max_cor),3) + " (" + CFACT.rott.max_cor_pair + ")" : "\u2014") +
+      ". Rotterdam has no missingness on any criterion variable.");
+}
 
 /* ---------------- Table S1b: PS diagnostics ---------------- */
 add(H1("Table S1b. Propensity-score behaviour inside the full protocol"));
-add(table(["specification","cohort","max |SMD|","covariates > 0.10","ESS","truncated","n retained"],
-[["M1 main effects, unstabilised, truncated (main analysis)","colon","0.011","0 of 5","172","0","176"],
- ["M2 + natural splines on continuous covariates","colon","0.026","0 of 5","166","0","176"],
- ["M3 + stabilised weights","colon","0.026","0 of 5","166","0","176"],
- ["M4 + trimming to common support","colon","0.058","0 of 5","165","0","172"],
- ["M1 main effects, unstabilised, truncated (main analysis)","Rotterdam","0.251","6 of 8","155","132","419"],
- ["M2 + natural splines on continuous covariates","Rotterdam","0.413","6 of 8","138","181","419"],
- ["M3 + stabilised weights","Rotterdam","0.413","6 of 8","139","181","419"],
- ["M4 + trimming to common support","Rotterdam","0.215","5 of 8","111","181","338"]],
-[3300,1100,1000,1300,800,1000,860],
-"Four covariates in colon are fixed by the criteria themselves inside the full protocol and carry no balance information. No specification restores balance in Rotterdam; splines make it worse. Of 116 full-protocol Rotterdam patients aged 55 to 70, 12 received chemotherapy; 175 of 203 treated patients are premenopausal against 45 of 216 controls."));
+if (PSX) {
+  const SPEC = {M1:"M1 main effects, unstabilised, truncated (main analysis)",
+                M2:"M2 + natural splines on continuous covariates",
+                M3:"M3 + stabilised weights",
+                M4:"M4 + trimming to common support"};
+  const order = ["colon (randomised)","Rotterdam (registry)"];
+  const rows = [];
+  order.forEach(coh => ["M1","M2","M3","M4"].forEach(sp => {
+    const z = PSX[coh + " " + sp]; if (!z) return;
+    rows.push([SPEC[sp], coh.split(" ")[0], f(z.max_smd,3),
+               f0(z.n_above_10) + " of " + f0(z.n_cov === undefined ? (coh[0]==="c" ? 5 : 8) : z.n_cov),
+               f0(z.ess), f0(z.n_trunc), f0(z.n_kept)]);
+  }));
+  add(table(["specification","cohort","max |SMD|","covariates > 0.10","ESS","truncated","n retained"],
+    rows, [3300,1100,1000,1300,800,1000,860],
+    "Covariates fixed by the criteria themselves inside the full protocol carry no balance information and are excluded from the count. No specification restores balance in Rotterdam."));
+}
 
 /* ---------------- Table S1c: overlap vs restriction ---------------- */
 add(H1("Table S1c. Overlap does not degrade with restriction"));
-add(P("Median over all subsets of each size, across the full 2⁹ enumeration in each cohort. If restriction created the positivity problem, the effective-sample-size fraction would fall from left to right. It does not."));
-add(table(["criteria applied","colon: median n","colon: ESS/n","Rotterdam: median n","Rotterdam: ESS/n","Rotterdam: truncated","Rotterdam: max |SMD|"],
-[["0","619","0.989","2982","0.374","0.397","0.465"],
- ["2","458","0.985","1968","0.383","0.366","0.436"],
- ["4","341","0.981","1266","0.381","0.309","0.327"],
- ["6","257","0.977","694","0.380","0.294","0.252"],
- ["9","176","0.976","419","0.369","0.315","0.251"]],
-[1500,1300,1200,1500,1400,1300,1160]));
+add(P("Median over all subsets of each size, across the full 2\u2079 enumeration in each cohort. If restriction created the positivity problem, the effective-sample-size fraction would fall as criteria are added. It does not."));
+if (OVL) {
+  const sizes = OVL.colon.map(r => r.size);
+  add(table(["criteria applied","colon: median n","colon: ESS/n","Rotterdam: median n","Rotterdam: ESS/n","Rotterdam: truncated","Rotterdam: max |SMD|"],
+    sizes.map((sz, k) => [f0(sz), f0(OVL.colon[k].n), f(OVL.colon[k].ess_frac,3),
+      f0(OVL.rott[k].n), f(OVL.rott[k].ess_frac,3),
+      f(OVL.rott[k].trunc,3),
+      f(OVL.rott[k].maxsmd,3)]),
+    [1600,1300,1200,1500,1400,1300,1400],
+    "The effective-sample-size fraction is flat in the number of criteria applied in both cohorts, so restriction is not what creates the lack of overlap in Rotterdam."));
+}
 
 /* ---------------- Table S2: factorial ---------------- */
 add(H1("Table S2. Threshold across the fractional factorial"));
@@ -136,12 +139,13 @@ if (FA.table && FA.table.length) {
 /* ---------------- Text S1 ---------------- */
 add(H1("Table S2b. Threshold analysis without conditioning on an observable threshold"));
 add(P("The threshold estimates in Table S2 are censored in ten of sixteen scenarios, so summarising only the six that are observable conditions on the outcome. Two analyses that do not. First, an interval-censored lognormal accelerated-failure-time regression of the threshold on the six factors, in which right-censored runs contribute (18 000, infinity) and the left-censored run (0, 600): the effect-modification factor completely separates the design — all eight diffuse runs are right-censored — so its coefficient is unbounded and not estimable, and the remaining terms are estimated from six exact observations with intervals spanning one to two orders of magnitude. Second, the sensitivity of the pattern to the 0.80 reliability target."));
-add(table(["reliability target","threshold located","right-censored","left-censored","median located n*","concentrated located","diffuse located"],
- [["0.70","7","8","1","2 000","6 of 8","1 of 8"],
-  ["0.80","6","9","1","3 265","6 of 8","0 of 8"],
-  ["0.90","6","10","0","4 811","6 of 8","0 of 8"]],
- [1700,1500,1400,1300,1500,1500,1460],
- "The separation by effect-modification arrangement is unchanged across targets, so nothing in the main text depends on the choice of 0.80."));
+if (TG) add(table(["reliability target","threshold located","right-censored","left-censored","median located n*","concentrated located","diffuse located"],
+ ["t70","t80","t90"].map(k => [f(TG[k].target,2), f0(TG[k].n_located), f0(TG[k].n_right), f0(TG[k].n_left),
+   TG[k].med === null ? "\u2014" : f0(TG[k].med),
+   f0(TG[k].conc_located) + " of " + f0(TG[k].conc_n),
+   f0(TG[k].diff_located) + " of " + f0(TG[k].diff_n)]),
+ [1900,1500,1400,1300,1500,1400,1360],
+ "Every column is computed from the stored ladder by the same interpolation, so the three targets are treated identically. The separation between the two arrangements is present at all three targets but is not identical across them: one diffuse scenario reaches the 0.70 target and none reaches 0.80 or 0.90."));
 
 add(H1("Table S3. Matched and frontier comparison, with patient-level uncertainty"));
 add(P("All 512 subsets are scored on the held-out half of each split. “Matched” keeps those whose eligible count is within the stated tolerance of the rule's. “On the frontier” means no scored subset admits at least as many patients at a hazard ratio at least as low. The proportion is computed within a split and splits are averaged with equal weight; intervals come from the outer bootstrap over patients, not from resampling splits. Rotterdam entries are descriptive, that cohort having a severe lack of empirical overlap."));
@@ -188,35 +192,25 @@ if (FO) add(table(["quantity","judged on a held-out half","judged at the populat
  [4600, 2400, 2360],
  "Roughly four in five apparently dominating subsets do not dominate at the population, and the empirical frontier understates the rule's true frontier membership by about a factor of two."));
 
-add(H1("Table S3c. Selecting on the absolute-benefit estimand instead"));
-add(P("The published rule decomposes the log hazard ratio. This variant retains every criterion whose Shapley value on the restricted mean difference is positive, and is scored out of sample on both estimands."));
-if (RR) add(table(["quantity","colon","Rotterdam (descriptive)"],
- [["the two rules select the same criterion set", f(RR.colon.same,3), f(RR.rott.same,3)],
-  ["eligible: full protocol", f0(RR.colon.n_full), f0(RR.rott.n_full)],
-  ["eligible: HR-selected rule", f0(RR.colon.n_hr), f0(RR.rott.n_hr)],
-  ["eligible: RMST-selected rule", f0(RR.colon.n_rm), f0(RR.rott.n_rm)],
-  ["HR-selected rule: P(lower HR)", f(RR.colon.hr_lowerHR,3), f(RR.rott.hr_lowerHR,3)],
-  ["HR-selected rule: P(greater RMST)", f(RR.colon.hr_moreRM,3), f(RR.rott.hr_moreRM,3)],
-  ["RMST-selected rule: P(lower HR)", f(RR.colon.rm_lowerHR,3), f(RR.rott.rm_lowerHR,3)],
-  ["RMST-selected rule: P(greater RMST)", f(RR.colon.rm_moreRM,3), f(RR.rott.rm_moreRM,3)]],
- [4200, 2600, 2560],
- "Switching the decomposition to the absolute-benefit estimand changes the selected criteria almost completely. The point estimates for the RMST-selected variant are not higher on either estimand, but the patient-level intervals reported in the main text are wide, so this is not evidence that the switch cannot help."));
-
-add(H1("Table S3d. Three-way split: does apparent dominance carry over?"));
-add(P("Each cohort is split into three stratified thirds. The rule is fitted on the first. All 512 subsets are scored on the second and those dominating the rule are recorded. Exactly those subsets are then re-evaluated on the third, which has been used for nothing. This measures the optimism of the held-out frontier inside the real cohorts, with no generating model."));
+add(H1("Table S3d. Three-way split: three frontier quantities, kept apart"));
+add(P("Each cohort is split into three stratified thirds. The rule is fitted on the first. All 512 subsets are scored on the second and those dominating the rule are recorded. Exactly those subsets — fixed before the third is touched — are then re-evaluated on the third. The three blocks below are different estimands and only block (b) is confirmatory. Block (c) re-scans all 512 subsets on the test third, so its counts are a fresh selection on the data that judges them and are not the survivors in block (b)."));
 if (NUM.threeway) { const A = NUM.threeway.colon, B = NUM.threeway.rott;
   add(table(["quantity","colon","Rotterdam (descriptive)"],
    [["three-way splits", f0(A.R), f0(B.R)],
-    ["dominating subsets on the selection third (median)", f0(A.dom_sel), f0(B.dom_sel)],
-    ["dominating subsets on the test third (median)", f0(A.dom_test), f0(B.dom_test)],
-    ["rule on the frontier, selection third", f(A.front_sel,3), f(B.front_sel,3)],
-    ["rule on the frontier, test third", f(A.front_test,3), f(B.front_test,3)],
-    ["share of selection-third dominators still dominating on the test third", f(A.repro,3), f(B.repro,3)],
-    ["same, requiring the margin on the selection third", f(A.reproM,3), f(B.reproM,3)],
-    ["qualifying under the margin (median)", f0(A.dom_selM), f0(B.dom_selM)],
-    ["lowest-hazard-ratio dominator carries over", f(A.best_holds,3), f(B.best_holds,3)]],
-   [4600, 2400, 2360],
-   "A third of the cohort is a small evaluation set, so these carry-over rates are themselves uncertain; they are reported as an order of magnitude for the optimism, consistent in direction with the simulation in Table S3b."));
+    ["(a) selection third \u2014 empirical, optimistic", "", ""],
+    ["      dominating subsets (median)", f0(A.dom_sel), f0(B.dom_sel)],
+    ["      rule undominated", f(A.front_sel,3), f(B.front_sel,3)],
+    ["(b) pre-selected subsets on the untouched third \u2014 CONFIRMATORY", "", ""],
+    ["      of those dominators, number still dominating (median)", f0(A.n_survive), f0(B.n_survive)],
+    ["      replication rate", f(A.repro,3), f(B.repro,3)],
+    ["      replication rate, margin required on the selection third", f(A.reproM,3), f(B.reproM,3)],
+    ["      lowest-hazard-ratio dominator carries over", f(A.best_holds,3), f(B.best_holds,3)],
+    ["      rule undominated by every pre-selected subset", f(A.front_conf,3), f(B.front_conf,3)],
+    ["(c) fresh scan of all 512 on the test third \u2014 descriptive only", "", ""],
+    ["      dominating subsets (median)", f0(A.dom_test), f0(B.dom_test)],
+    ["      rule undominated", f(A.front_test,3), f(B.front_test,3)]],
+   [5000, 2200, 2160],
+   "Only block (b) is an out-of-sample confirmation, because its comparator set was fixed before the test third was used. Block (a) is the empirical oracle whose optimism is being measured; block (c) is a second empirical oracle on a different half, reported so a reader can see that the counts are a property of any part of these cohorts rather than evidence about the rule. A third of a cohort is a small evaluation set, so all of these rates are themselves uncertain."));
 }
 
 add(H1("Table S3e. Restricted-mean horizon"));
@@ -227,7 +221,7 @@ if (NUM.horizon) {
   add(table(["horizon (days)","same set","Jaccard","mean Hamming","RMST: full","HR rule","RMST rule"],
     mk(NUM.horizon.colon, NUM.horizon.tau_colon).concat(mk(NUM.horizon.rott, NUM.horizon.tau_rott)),
     [2200, 1100, 1050, 1300, 1300, 1200, 1210],
-    "Upper block colon, lower block Rotterdam. Hamming is the number of criteria on which the two selections differ, out of six. The two decompositions disagree at every horizon tried, so the disagreement is a property of the estimands and not of the horizon; the exact agreement rate is horizon-dependent."));
+    "Upper block colon, lower block Rotterdam. Hamming is the number of criteria on which the two selections differ, out of the nine in each cohort's protocol. The two decompositions disagree at every horizon tried, so the disagreement is a property of the estimands and not of the horizon; the exact agreement rate is horizon-dependent."));
 }
 
 add(H1("Table S4. Arrangement of the effect modification, total held fixed"));
@@ -240,17 +234,17 @@ if (CN.A_dil1_enr1) {
     ["C  dilution in 1, enrichment in 4", "0.30"].concat(CN.C_dil1_enr4.rows.map(r=>f(r.p_lower,2))),
     ["D  dilution in 2, enrichment in 1", "0.15"].concat(CN.D_dil2_enr1.rows.map(r=>f(r.p_lower,2)))],
    [3400, 2000, 1200, 1200, 1300, 1260],
-   "Spreading the enrichment (A to C) raises success rather than leaving it unchanged, by 0.21 with a Monte Carlo interval of [0.08, 0.34] at 6 000. Halving the diluting coefficient (A against D) reduces success from 0.85 to 0.43 at the largest size, but it also roughly halves the attainable improvement in the hazard ratio, so the coefficient and the size of the prize are confounded in this design and neither can be assigned the reduction on its own. Monte Carlo standard error is at most 0.065."));
+   "Spreading the enrichment (A to C) raises success rather than leaving it unchanged, by " + (CD ? f(CD.B_dil1_enr2.rows[2].diff,2) + " with a Monte Carlo interval of [" + f(CD.B_dil1_enr2.rows[2].lo,2) + ", " + f(CD.B_dil1_enr2.rows[2].hi,2) + "]" : "\u2014") + " at 6 000. Halving the diluting coefficient (A against D) reduces success from " + f(CN.A_dil1_enr1.rows[3].p_lower,2) + " to " + f(CN.D_dil2_enr1.rows[3].p_lower,2) + " at the largest size, but it also roughly halves the attainable improvement in the hazard ratio, so the coefficient and the size of the prize are confounded in this design and neither can be assigned the reduction on its own. Monte Carlo standard error is at most " + f(Math.max.apply(null, Object.keys(CN).map(k => Math.max.apply(null, CN[k].rows.map(r => r.se)))),3) + "."));
 }
 
-add(H1("Table S4b. Success against a criterion-specific signal-to-noise ratio"));
-add(P("Four arrangements of the same total effect modification, each at three fitting sizes. The signal is the population Shapley value of the most diluting criterion; the noise is the standard deviation of its estimate at that fitting size; the scoring set is fixed at 40 000 patients. If a signal-to-noise ratio governed the requirement, cells with similar ratios would show similar success whatever the arrangement and whatever the sample size. Twelve cells cannot establish that, and this is reported as a direction rather than as evidence."));
+add(H1("Table S4b. Success against a criterion-specific signal-to-noise ratio (a separate run)"));
+add(P("Four arrangements of the same total effect modification, each at three fitting sizes. This is a SEPARATE simulation from Table S4: it uses its own fitting sizes, a smaller scoring set and fewer replicates, so the success probabilities for the identically named arrangements are not comparable cell by cell with that table and are not meant to be. Only the ordering within this table is interpreted. The signal is the population Shapley value of the most diluting criterion; the noise is the standard deviation of its estimate at that fitting size; the scoring set is fixed at 40 000 patients, against 60 000 in Table S4. If a signal-to-noise ratio governed the requirement, cells with similar ratios would show similar success whatever the arrangement and whatever the sample size. Twelve cells cannot establish that, and this is reported as a direction rather than as evidence."));
 if (NUM.snr_curve) {
   add(table(["arrangement / fitting size","population signal","SD of the estimate","signal-to-noise","P(lower hazard ratio)"],
     NUM.snr_curve.cells.map(r => [["A dilution 1, enrichment 1","B dilution 1, enrichment 2","C dilution 1, enrichment 4","D dilution 2, enrichment 1"][r.arr-1] + " / " + f0(r.n),
       f(r.phi_pop,4), f(r.sd,4), f(r.snr,2), f(r.win,2)]),
     [3600, 1700, 1700, 1400, 1960],
-    "Spearman correlation with success: " + f(NUM.snr_curve.sp_snr,2) + " for the signal-to-noise ratio against " + f(NUM.snr_curve.sp_n,2) + " for fitting size alone, over " + NUM.snr_curve.cells.length + " cells at " + NUM.snr_curve.nrep + " replicates each. The ratio orders the cells better than sample size does, which is the direction the reviewer's suggestion predicts. It is not a demonstration: twelve cells at twenty-five replicates cannot establish a governing quantity, the ratio rises with the fitting size within every arrangement so the two are correlated by construction, and within arrangements C and D success barely moves with size at all."));
+    "Spearman correlation with success, pooled over all " + NUM.snr_curve.cells.length + " cells at " + NUM.snr_curve.nrep + " replicates each: " + f(NUM.snr_curve.sp_snr,2) + " for the signal-to-noise ratio against " + f(NUM.snr_curve.sp_n,2) + " for fitting size alone. The pooled figure should not be read as evidence for the ratio. Within an arrangement the ratio is a monotone function of the fitting size, so the within-arrangement association (" + (isFinite(NUM.snr_curve.sp_within) ? f(NUM.snr_curve.sp_within,2) : "—") + " after adjusting for arrangement) restates that success rises with sample size. The informative comparison is between arrangements at a fixed size, where it is " + (isFinite(NUM.snr_curve.sp_between) ? f(NUM.snr_curve.sp_between,2) : "—") + " at the largest size tried, over " + NUM.snr_curve.n_arr + " arrangements of which " + NUM.snr_curve.n_flat + " shows no variation in success across sizes. This table is exploratory and does not establish a governing quantity."));
 }
 
 add(H1("Figure S3. Propensity distributions inside the full protocol"));
@@ -262,7 +256,7 @@ add(new Paragraph({spacing:{after:200}, alignment:AlignmentType.CENTER,
 add(H1("Text S1. Complete specification of every generating mechanism"));
 add(P("No parameter below was estimated from either cohort. All were set a priori. Z denotes a vector of independent standard normal covariates, A the treatment indicator, and E the vector of eligibility indicators.", {after:160}));
 
-add(P("S1.1 Training-size sweep (Figure 3)", {b:true, after:70}));
+add(P("S1.1 Training-size sweep (Figure 2)", {b:true, after:70}));
 MONO && add(MONO("p = 8 criteria; per-criterion retention (0.85, 0.75, 0.70, 0.90, 0.80, 0.85, 0.75, 0.90)"));
 add(MONO("Z_k ~ N(0,1), k = 1..8, independent      threshold_k = Phi^-1(retention_k)"));
 add(MONO("E_k = 1{ Z_k <= threshold_k }            A ~ Bernoulli(0.5)"));
@@ -272,7 +266,7 @@ add(MONO("T ~ Exponential(rate = 0.20 * exp(eta))  C ~ Exponential(rate = 0.05)"
 add(MONO("observed time = min(T, C), event = 1{T <= C}   tau = 8, min per arm = 3"));
 add(P("Fitting sizes 300, 1000, 3000, 5167 and 20 000 with 300 replicates each; scoring set fixed at 100 000 patients generated once with seed 999; population reference enumerated at N = 300 000.", {after:170}));
 
-add(P("S1.2 Three assignment arms (Figure 4)", {b:true, after:70}));
+add(P("S1.2 Three assignment arms (Figure 3)", {b:true, after:70}));
 add(MONO("Outcome model identical to S1.1 in all three arms."));
 add(MONO("arm A  randomised            A ~ Bernoulli(0.5)"));
 add(MONO("arm B  confounded, adjusted  A ~ Bernoulli( logit^-1( Z . alpha ) ),"));
@@ -280,9 +274,9 @@ add(MONO("                             alpha = (0.6, 0.5, 0.4, 0, 0, 0, 0, 0)"))
 add(MONO("                             propensity model uses V1..V8"));
 add(MONO("arm C  one confounder unmeasured: assignment as arm B,"));
 add(MONO("                             propensity model uses V2..V8 only"));
-add(P("250 replicates per cell at fitting sizes 1000, 3000, 5167 and 20 000. Because the outcome model is common, the true causal contrast is identical in all three arms; what differs across arms is the population limit of the weighted estimator.", {after:170}));
+add(P("250 replicates per cell; arm A additionally carries a 300-patient cell at 300 replicates, and arm C has no 20 000 cell. Because the outcome model is common, the true causal contrast is identical in all three arms; what differs across arms is the population limit of the weighted estimator.", {after:170}));
 
-add(P("S1.3 Non-collapsibility sweep (Figure 5)", {b:true, after:70}));
+add(P("S1.3 Non-collapsibility sweep (Figure 4)", {b:true, after:70}));
 add(MONO("N = 300 000, tau = 5, conditional log hazard ratio bA = log(0.6)"));
 add(MONO("Z ~ N(0,1)   A ~ Bernoulli(0.5)"));
 add(MONO("T ~ Exponential(rate = 0.25 * exp(bA*A + bZ*Z)),  bZ swept over"));
@@ -330,7 +324,7 @@ add(new Paragraph({spacing:{after:200}, alignment:AlignmentType.CENTER,
 
 add(new Paragraph({children:[new d.PageBreak()]}));
 add(H1("Figure S2. Full-page criteria plate plot"));
-add(P("The colon criteria plate plot at full page size, reproducing Figure 6 of the main text.", {after:120}));
+add(P("The colon criteria plate plot at full page size, reproducing Figure 5 of the main text.", {after:120}));
 add(new Paragraph({spacing:{after:100}, alignment:AlignmentType.CENTER,
   children:[new d.ImageRun({data: fs.readFileSync("/home/claude/repo/figures/fig2_plate3.png"),
     type:"png", transformation:{width:600, height:713}})]}));

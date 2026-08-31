@@ -17,11 +17,7 @@ source("analysis/_setup.R")
 BANDS <- c(0.02, 0.05, 0.10, 0.15)
 MARGIN <- 0.05                 # on the LOG hazard ratio; see the text
 
-strat_split <- function(d, trt, st, frac) {
-  key <- interaction(d[[trt]], d[[st]], drop = TRUE)
-  unlist(lapply(split(seq_len(nrow(d)), key), function(ix)
-    if (length(ix) < 2) ix else sample(ix, max(1, floor(frac * length(ix))))))
-}
+## strat_split() now lives in analysis/_setup.R so every script shares it.
 
 run <- function(dat, crit, ps, trt, tm, st, tau, R, label, seed = 101) {
   set.seed(seed); n <- nrow(dat); p <- length(crit); full <- seq_len(p)
@@ -44,7 +40,14 @@ run <- function(dat, crit, ps, trt, tm, st, tau, R, label, seed = 101) {
     o <- c(n_full=N[kF], n_rule=nR, hr_full=exp(H[kF]), hr_rule=exp(hR),
            rm_full=RM[kF], rm_rule=rR,
            more = as.numeric(nR > N[kF]), lower = as.numeric(hR < H[kF]),
-           greater = as.numeric(rR > RM[kF]))
+           greater = as.numeric(rR > RM[kF]),
+           ## Reviewer round 5, major point 1. The decomposition of the eligibility
+           ## promise was quoted in the Results as three literals with no source.
+           ## The rule removes at least one criterion; separately, the removals may
+           ## or may not bind on the scoring half. Both are recorded here.
+           removed_any = as.numeric(length(S_hr) < p),
+           removed_binding = as.numeric(length(S_hr) < p && nR > N[kF]),
+           n_removed = p - length(S_hr))
     for (b in BANDS) {
       m <- ok & abs(N - nR) <= b*nR; m[kR] <- FALSE
       o[paste0("hr",b)] <- if (sum(m)) mean(H[m] > hR) else NA_real_

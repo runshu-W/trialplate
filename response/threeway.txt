@@ -1,15 +1,21 @@
-03:43:06 
+08:45:30 
 ===== colon : 400 three-way splits (tau = 1825) ===== 
-03:43:06   dominating subsets, median: selection third 76 | test third 73 
-03:43:06   rule on the frontier: selection third 0.025 | test third 0.043 
-03:43:06   of subsets dominating on the selection third, 0.353 still dominate on the test third 
-03:43:06   with a 0.05 margin required on the selection third: 0.347 (median 52 qualify) 
-03:43:06   the single lowest-HR dominator carries over in 0.336 of splits 
-03:55:00 
+08:45:30   dominating subsets, median: selection third 76 | test third 73 
+08:45:30   (a) rule undominated on the selection third (empirical)        : 0.025 
+08:45:30   (b) rule undominated by the PRE-SELECTED set on the test third  : 0.210  <- confirmatory 
+08:45:30   (c) rule undominated on a fresh scan of the test third (descr.) : 0.043 
+08:45:30       surviving dominators, median 12 of 76 pre-selected 
+08:45:30   of subsets dominating on the selection third, 0.353 still dominate on the test third 
+08:45:30   with a 0.05 margin required on the selection third: 0.347 (median 52 qualify) 
+08:45:30   the single lowest-HR dominator carries over in 0.336 of splits 
+08:54:12 
 ===== Rotterdam : 300 three-way splits (tau = 2555) ===== 
-03:55:00   dominating subsets, median: selection third 56 | test third 59 
-03:55:00   rule on the frontier: selection third 0.027 | test third 0.047 
-03:55:00   of subsets dominating on the selection third, 0.414 still dominate on the test third 
-03:55:00   with a 0.05 margin required on the selection third: 0.412 (median 34 qualify) 
-03:55:00   the single lowest-HR dominator carries over in 0.394 of splits 
-03:55:00 ALL DONE 
+08:54:12   dominating subsets, median: selection third 56 | test third 59 
+08:54:12   (a) rule undominated on the selection third (empirical)        : 0.027 
+08:54:12   (b) rule undominated by the PRE-SELECTED set on the test third  : 0.120  <- confirmatory 
+08:54:12   (c) rule undominated on a fresh scan of the test third (descr.) : 0.047 
+08:54:12       surviving dominators, median 16 of 56 pre-selected 
+08:54:12   of subsets dominating on the selection third, 0.414 still dominate on the test third 
+08:54:12   with a 0.05 margin required on the selection third: 0.412 (median 34 qualify) 
+08:54:12   the single lowest-HR dominator carries over in 0.394 of splits 
+08:54:12 ALL DONE 

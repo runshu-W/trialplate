@@ -67,6 +67,32 @@ the halves share none. Correcting the leak narrowed the intervals.
 | `snr_check.R` | is a criterion-specific signal-to-noise ratio the better governing quantity? | R3 major 5 |
 | `colon_weighting_oos.R` | the three weighting schemes carried through the full out-of-sample evaluation | R3 minor 1 |
 
+### Added in the fifth revision
+
+The fifth review found that the fourth cover letter's central claim — that every
+figure in the paper is generated from one result file — was false. Two superseded
+result objects were still being read, and 84 figures were typed into prose by hand.
+The remedy is a guard rather than another promise.
+
+| file | what it does |
+|---|---|
+| `../manuscript/check_numbers.js` | scans every double-quoted string in all five document sources and fails the build on any decimal or percentage that is not a whitelisted design constant. Runs as the first step of `build.js`. |
+| `confound_limits.R` | the three population gap limits for the confounding arms, which had been typed into `figures.R` **and** the Results from a parameterisation no longer in the repository |
+| `out/superseded/` | five retired result objects, with a note on why each was retired. `export_numbers.R` refuses to run if any of them reappears in `out/`. |
+
+Secondary runs that used to report their own estimate of a quantity the primary
+analysis already covers — the weighting sensitivity and the horizon sweep — now use
+the primary run's seed, split count and stratified split (`strat_split()` moved into
+`_setup.R` so every script shares one function). `export_numbers.R` asserts that the
+overlapping cells agree exactly.
+
+Things the guard found that a reader would not have: a figure caption claiming a 32%
+inflation where the current model gives 8.6%; a leverage over-prediction stated as
+10–30% where it is 11–44%; Supplement Tables S1, S1b, S1c and S2b typed by hand; and
+Figure 3 plotting the pre-correction Rotterdam values while reading its intervals
+from a retired object. The guard does not test bare integers; those were checked by
+hand for this revision.
+
 ### Added in the fourth revision
 
 | script | what it answers | reviewer point |

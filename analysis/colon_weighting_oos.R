@@ -30,13 +30,20 @@ enum_w <- function(pr, scheme) {
   V
 }
 
-R <- as.integer(Sys.getenv("CWT_R", "300"))
+## Reviewer round 5, minor point 2. This ran at its own seed and split count, so
+## its estimated-propensity arm gave 0.250 where the primary analysis gives its own
+## value for the same quantity, and a reader could not tell whether the difference
+## was the weighting or the run. It now uses the primary run's seed, split count and
+## stratified split function, so the "ps" row IS the primary estimate and the other
+## two rows differ from it only in the weighting. export_numbers.R asserts equality.
+R <- as.integer(Sys.getenv("CWT_R", "500"))          # primary colon split count
+SEED <- 101L                                          # primary colon seed
 d <- colon_data(); n <- nrow(d); p <- length(colon_criteria); full <- seq_len(p)
 bits <- bitwShiftL(1L, 0:(p-1))
-set.seed(31)
+set.seed(SEED)
 res <- .tp_lapply(seq_len(R), function(r) {
-  set.seed(31000 + r)
-  ix <- sample(n, floor(0.5*n))
+  set.seed(SEED * 1000 + r)
+  ix <- strat_split(d, "trt", "status", 0.5)
   fit <- tp_prepare(d[ix,,drop=FALSE],  colon_criteria, "trt","time","status", colon_ps, tau=1825)
   sc  <- tp_prepare(d[-ix,,drop=FALSE], colon_criteria, "trt","time","status", colon_ps, tau=1825)
   o <- c()
@@ -56,7 +63,7 @@ M <- do.call(rbind, res[!vapply(res, is.null, logical(1))])
 ci <- function(x){x<-x[is.finite(x)]; q<-replicate(2000, mean(sample(x,replace=TRUE)))
   sprintf("%.3f [%.3f, %.3f]", mean(x), quantile(q,.025), quantile(q,.975))}
 sink("analysis/out/colon_weighting_oos.txt", split = TRUE)
-cat(sprintf("colon is randomised: out-of-sample performance under three weightings (%d splits)\n\n", nrow(M)))
+cat(sprintf("colon is randomised: out-of-sample performance under three weightings (%d splits,\nsame seed and stratified split as the primary analysis, so the ps row is the primary estimate)\n\n", nrow(M)))
 cat(sprintf("%-28s %22s %22s %10s %8s\n","weighting","P(lower HR)","P(more eligible)","mean HR","criteria kept"))
 for (s in c("ps","known","none")) cat(sprintf("%-28s %22s %22s %10.4f %8.2f\n",
   c(ps="estimated propensity", known="known randomisation prob", none="unweighted")[s],

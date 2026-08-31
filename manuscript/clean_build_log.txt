@@ -1,0 +1,34 @@
+================================================================
+ trialplate: clean rebuild from stored result objects to documents
+ 2026-08-31 10:47:32 UTC
+ R 4.3.3   node v22.22.2
+================================================================
+
+--- 1. export: guards and consistency assertions ---------------
+10:47:34 superseded-object check passed ( 5  objects retired) 
+10:47:34 endpoint source check passed over  49  scripts 
+10:47:34 exported 32 blocks 
+
+--- 2. number provenance over the manuscript sources -----------
+number provenance check passed over 5 manuscript sources; 37 structural constants whitelisted
+
+--- 3. documents -----------------------------------------------
+number provenance check passed over 5 manuscript sources; 37 structural constants whitelisted
+written 793707 bytes; 22 of 22 references cited
+supplement written 485030 bytes
+written 13508 bytes
+written 18450 bytes
+
+--- 4. what the guards checked ---------------------------------
+retired result objects held out of the read path:
+    pareto_benchmark.rds
+    random_benchmark.rds
+    rmst_rule.rds
+    snr_check.rds
+    split_dependence.rds
+
+cross-run agreement asserted at export time:
+    quantity                                            secondary primary
+    colon criterion-set agreement (horizon sweep)       0.07      0.07
+    Rotterdam criterion-set agreement (horizon sweep)   0.2075    0.2075
+    colon P(lower HR) (weighting sensitivity, ps arm)   0.29      0.29

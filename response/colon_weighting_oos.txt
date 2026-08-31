@@ -1,9 +1,10 @@
-colon is randomised: out-of-sample performance under three weightings (300 splits)
+colon is randomised: out-of-sample performance under three weightings (500 splits,
+same seed and stratified split as the primary analysis, so the ps row is the primary estimate)
 
 weighting                               P(lower HR)       P(more eligible)    mean HR criteria kept
-estimated propensity           0.250 [0.203, 0.300]   0.990 [0.977, 1.000]     0.6800     5.43
-known randomisation prob       0.260 [0.213, 0.310]   0.997 [0.990, 1.000]     0.6955     5.13
-unweighted                     0.267 [0.220, 0.320]   0.997 [0.990, 1.000]     0.6959     5.11
+estimated propensity           0.290 [0.250, 0.330]   0.988 [0.978, 0.996]     0.6734     5.46
+known randomisation prob       0.304 [0.266, 0.344]   0.992 [0.984, 0.998]     0.6819     5.20
+unweighted                     0.308 [0.266, 0.346]   0.992 [0.984, 0.998]     0.6828     5.19
 
 Intervals are across splits and so are narrower than the patient-level
 uncertainty reported elsewhere; they are shown to compare the three schemes

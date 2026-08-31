@@ -71,29 +71,6 @@ if (!is.null(fa)) {
   }
 }
 
-## ---- random-relaxation benchmark ----------------------------------------
-rb <- rd("analysis/out/random_benchmark.rds")
-if (!is.null(rb)) J$random <- lapply(rb, function(M) list(
-  R = nrow(M), k = mean(M[,"k"]),
-  p_more_full = mean(M[,"n_rule"] > M[,"n_full"]),
-  p_more_rand = mean(M[,"beat_n"],  na.rm=TRUE),
-  p_hr_rand   = mean(M[,"beat_hr"], na.rm=TRUE),
-  n_full = mean(M[,"n_full"]), n_rule = mean(M[,"n_rule"]), n_rand = mean(M[,"n_rand"],na.rm=TRUE),
-  hr_full= mean(M[,"hr_full"]), hr_rule= mean(M[,"hr_rule"]), hr_rand= mean(M[,"hr_rand"],na.rm=TRUE)))
-
-## ---- split dependence ----------------------------------------------------
-sd_ <- rd("analysis/out/split_dependence.rds")
-if (!is.null(sd_)) J$dependence <- lapply(sd_, function(z) list(
-  p_more = z$more$point, p_lower = z$lower$point,
-  se_more = z$more$sd_total, se_lower = z$lower$sd_total,
-  mc_lower = z$lower$sd_mc, between_lower = z$lower$sd_between,
-  mc_more = z$more$sd_mc, between_more = z$more$sd_between,
-  naive_lower = z$lower$se_naive, naive_more = z$more$se_naive,
-  infl_lower = z$lower$inflation,
-  ratio_between_lower = z$lower$sd_between / z$lower$se_naive,
-  ci_more = z$more$ci, ci_lower = z$lower$ci,
-  B = z$B_OUT, R_IN = z$R_IN))
-
 ## ---- recovery metrics ----------------------------------------------------
 rc <- rd("analysis/out/recovery_metrics.rds")
 if (!is.null(rc)) {
@@ -127,22 +104,6 @@ if (!is.null(fr)) {
 cs <- rd("analysis/out/concentration_sweep.rds")
 if (!is.null(cs)) J$concentration <- lapply(cs, function(z) list(
   carriers = z$carriers, rows = as.data.frame(z$rows)))
-pb <- rd("analysis/out/pareto_benchmark.rds")
-if (!is.null(pb)) J$pareto <- lapply(pb, function(M) {
-  ci <- function(x) { x <- x[is.finite(x)]
-    q <- replicate(2000, mean(sample(x, replace=TRUE)))
-    c(est = mean(x), lo = unname(quantile(q,.025)), hi = unname(quantile(q,.975))) }
-  list(R = nrow(M), n_match = median(M[,"n_match"]),
-       rank_hr = ci(M[,"rank_hr"]), rank_rm = ci(M[,"rank_rm"]),
-       front_hr = ci(M[,"on_frontier_hr"]), front_rm = ci(M[,"on_frontier_rm"]),
-       n_dom = median(M[,"n_dominating"])) })
-rbci <- rd("analysis/out/random_benchmark.rds")
-if (!is.null(rbci)) J$random_ci <- lapply(rbci, function(M) {
-  ci <- function(x) { x <- x[is.finite(x)]
-    q <- replicate(3000, mean(sample(x, replace=TRUE)))
-    c(est = mean(x), lo = unname(quantile(q,.025)), hi = unname(quantile(q,.975))) }
-  list(hr = ci(M[,"beat_hr"]), cnt = ci(M[,"beat_n"])) })
-
 cv <- rd("analysis/out/sim_coverage.rds")
 if (!is.null(cv)) {
   n1 <- length(cv$cov_bca_planted); n2 <- length(cv$cov_bca_null)
@@ -159,7 +120,8 @@ if (!is.null(cv)) {
 ## here, at the full split count. The nested bootstrap supplies uncertainty only.
 prm <- function(lab) {
   z <- rd(sprintf("analysis/out/primary_%s.rds", lab)); if (is.null(z)) return(NULL)
-  M <- z$M; m <- function(k) mean(M[, k], na.rm = TRUE)
+  M <- z$M
+  m <- function(k) if (k %in% colnames(M)) mean(M[, k], na.rm = TRUE) else NA_real_
   o <- list(R = z$R, tau = z$tau, time_var = z$time_var, status_var = z$status_var,
             margin = z$MARGIN, bands = z$BANDS,
             n_full = m("n_full"), n_rule = m("n_rule"), hr_full = m("hr_full"),
@@ -170,9 +132,14 @@ prm <- function(lab) {
             same_set = m("same_set"), n_rmrule = m("n_rmrule"),
             rmrule_lower = m("rmrule_lower"), rmrule_greater = m("rmrule_greater"),
             se_n = sd(M[,"n_rule"] - M[,"n_full"])/sqrt(nrow(M)),
+            ## the naive across-split standard error, which the Results contrasts
+            ## with the outer-sampling component from the nested bootstrap
+            se_lower = sd(M[,"lower"])/sqrt(nrow(M)),
             se_hr = sd(M[,"hr_rule"] - M[,"hr_full"])/sqrt(nrow(M)),
             d_n = m("n_rule") - m("n_full"), d_hr = m("hr_rule") - m("hr_full"),
-            d_rm = m("rm_rule") - m("rm_full"))
+            d_rm = m("rm_rule") - m("rm_full"),
+            removed_any = m("removed_any"), removed_binding = m("removed_binding"),
+            n_removed = m("n_removed"))
   for (b in z$BANDS) { o[[paste0("hr",b)]] <- m(paste0("hr",b))
                        o[[paste0("rm",b)]] <- m(paste0("rm",b))
                        o[[paste0("nm",b)]] <- m(paste0("nm",b))
@@ -219,12 +186,17 @@ J$nested <- list(colon = nst("colon"), rott = nst("rott"))
 ## ---- round-4 additions ---------------------------------------------------
 tw <- rd("analysis/out/threeway.rds")
 if (!is.null(tw)) {
-  g <- function(M, nm, fn = mean) { x <- M[, nm]; unname(fn(x[is.finite(x)])) }
+  g <- function(M, nm, fn = mean) { if (!(nm %in% colnames(M))) return(NA_real_)
+                                    x <- M[, nm]; unname(fn(x[is.finite(x)])) }
   one <- function(M) list(R = nrow(M),
-    dom_sel = g(M, "n_domB", stats::median), dom_test = g(M, "n_domC", stats::median),
-    front_sel = g(M, "front_B"), front_test = g(M, "front_C"),
-    repro = g(M, "repro"), reproM = g(M, "reproM"),
-    dom_selM = g(M, "n_domBM", stats::median), best_holds = g(M, "best_holds"))
+    ## (a) selection third, empirical and optimistic
+    dom_sel = g(M, "n_domB", stats::median), front_sel = g(M, "front_B"),
+    ## (b) confirmatory: the pre-selected set re-evaluated on untouched patients
+    n_survive = g(M, "n_survive", stats::median), repro = g(M, "repro"),
+    front_conf = g(M, "front_conf"), reproM = g(M, "reproM"),
+    dom_selM = g(M, "n_domBM", stats::median), best_holds = g(M, "best_holds"),
+    ## (c) descriptive: a fresh scan of all 512 on the test third
+    dom_test = g(M, "n_domC", stats::median), front_test = g(M, "front_C"))
   J$threeway <- list(colon = one(tw$colon), rott = one(tw$rott))
 }
 
@@ -243,8 +215,25 @@ if (!is.null(hz)) {
 
 sc <- rd("analysis/out/snr_curve.rds")
 if (!is.null(sc)) {
-  J$snr_curve <- list(cells = lapply(seq_len(nrow(sc$T)), function(i) as.list(sc$T[i, ])),
-                      sp_snr = sc$sp_snr, sp_n = sc$sp_n, nrep = sc$nrep, sizes = sc$sizes)
+  ## Reviewer round 5, major point 4. The pooled correlation is driven by both the
+  ## arrangement and the fitting size, and within an arrangement the ratio rises with
+  ## the size by construction, so a high within-arrangement correlation says little
+  ## more than "success rises with n". The informative comparison is BETWEEN
+  ## arrangements at a fixed size. All three are exported and all three are reported.
+  Tm <- sc$T
+  sp <- function(a, b) if (length(unique(a)) < 2 || length(unique(b)) < 2) NA_real_ else
+                       suppressWarnings(stats::cor(a, b, method = "spearman"))
+  big <- Tm[, "n"] == max(Tm[, "n"])
+  af  <- factor(Tm[, "arr"])
+  adj <- sp(stats::residuals(stats::lm(Tm[, "win"] ~ af)),
+            stats::residuals(stats::lm(Tm[, "snr"] ~ af)))
+  J$snr_curve <- list(cells = lapply(seq_len(nrow(Tm)), function(i) as.list(Tm[i, ])),
+                      sp_snr = sc$sp_snr, sp_n = sc$sp_n, nrep = sc$nrep, sizes = sc$sizes,
+                      sp_between = sp(Tm[big, "win"], Tm[big, "snr"]),
+                      sp_within  = adj,
+                      n_flat = sum(vapply(sort(unique(Tm[, "arr"])), function(a)
+                        as.numeric(length(unique(Tm[Tm[, "arr"] == a, "win"])) < 2), numeric(1))),
+                      n_arr = length(unique(Tm[, "arr"])))
 }
 
 fo <- rd("analysis/out/frontier_optimism.rds")
@@ -254,23 +243,258 @@ if (!is.null(fo)) { m <- function(x) mean(x[is.finite(x)])
     front_emp = m(fo[,"front_emp"]), front_pop = m(fo[,"front_pop"]),
     repro = m(fo[,"repro_B"]), true_frac = m(fo[,"true_frac"])) }
 
-rr <- rd("analysis/out/rmst_rule.rds")
-if (!is.null(rr)) J$rmst_rule <- lapply(rr, function(M) { m <- function(x) mean(x[is.finite(x)])
-  list(same = m(M[,"same_set"]), n_full = m(M[,"n_full"]), n_hr = m(M[,"n_hr"]), n_rm = m(M[,"n_rm"]),
-       hr_lowerHR = m(M[,"hrrule_lowerHR"]), hr_moreRM = m(M[,"hrrule_moreRM"]),
-       rm_lowerHR = m(M[,"rmrule_lowerHR"]), rm_moreRM = m(M[,"rmrule_moreRM"]),
-       hrHR = m(M[,"hr_of_hrrule"]), rmHR = m(M[,"hr_of_rmrule"]), fullHR = m(M[,"hr_full"]),
-       hrRM = m(M[,"rm_of_hrrule"]), rmRM = m(M[,"rm_of_rmrule"]), fullRM = m(M[,"rm_full"])) })
-
-sn <- rd("analysis/out/snr_check.rds")
-if (!is.null(sn)) J$snr <- as.data.frame(sn)
-
 cw <- rd("analysis/out/colon_weighting_oos.rds")
 if (!is.null(cw)) { m <- function(x) mean(x[is.finite(x)])
   J$colon_wt <- setNames(lapply(c("ps","known","none"), function(s) list(
     lower = m(cw[, paste0(s,"_lower")]), more = m(cw[, paste0(s,"_more")]),
     hr = m(cw[, paste0(s,"_hr")]), nkeep = m(cw[, paste0(s,"_nkeep")]))),
     c("ps","known","none")) }
+
+## ---- round-5: blocks that existed only as literals in the manuscript ------
+## Reviewer round 5, major point 1. A provenance check over the manuscript sources
+## found 84 figures typed into prose rather than read from here. The results they
+## quote were all computed, but the numbers had been transcribed by hand, which is
+## the same failure mode that produced the endpoint inconsistency. Everything the
+## text quotes is exported below and the check now runs as part of the build.
+
+ct <- rd("analysis/out/confound_table.rds")
+if (!is.null(ct)) {
+  gv <- function(arm, n, col) { r <- ct[ct$arm == arm & ct$n == n, col]
+                                if (length(r)) unname(r[1]) else NULL }
+  arms <- unique(ct$arm)
+  J$confound <- list(
+    arms = arms, sizes = sort(unique(ct$n)),
+    rows = lapply(seq_len(nrow(ct)), function(i) as.list(ct[i, ])),
+    rand_5167 = gv(arms[1], 5167, "p"), adj_5167 = gv(arms[2], 5167, "p"),
+    unmeas_5167 = gv(arms[3], 5167, "p"),
+    rand_300 = gv(arms[1], 300, "p"), rand_20000 = gv(arms[1], 20000, "p"),
+    rand_1000 = gv(arms[1], 1000, "p"), rand_3000 = gv(arms[1], 3000, "p"),
+    elig_300 = gv(arms[1], 300, "pn"), elig_20000 = gv(arms[1], 20000, "pn"),
+    rec_rand_5167 = gv(arms[1], 5167, "rec"), rec_unmeas_5167 = gv(arms[3], 5167, "rec"),
+    rec_adj_5167 = gv(arms[2], 5167, "rec"))
+}
+
+ss <- rd("analysis/out/sim_sweep.rds")
+if (!is.null(ss)) {
+  ss <- as.data.frame(ss)
+  J$noncollapse <- list(
+    rows = lapply(seq_len(nrow(ss)), function(i) as.list(ss[i, ])),
+    bz_min = min(ss$bZ), bz_max = max(ss$bZ),
+    cond_hr = unique(ss$conditional_HR)[1],
+    phi_hr_zero = ss$phi_logHR[which.min(ss$bZ)],
+    phi_hr_max  = ss$phi_logHR[which.max(ss$bZ)],
+    hr_all_zero = ss$HR_all[which.min(ss$bZ)], hr_all_max = ss$HR_all[which.max(ss$bZ)],
+    rm_all_weak = ss$RM_all[2], rm_sub_weak = ss$RM_sub[2],
+    rm_all_strong = ss$RM_all[nrow(ss)], rm_sub_strong = ss$RM_sub[nrow(ss)])
+}
+
+## Interaction leverage needs only the eligibility indicators, so it is computed
+## here from the cohort directly rather than transcribed from a figure script.
+plate <- function(dat, crit, ps, trt, tm, st, tau, path) {
+  pr <- tryCatch(tp_prepare(dat, crit, trt, tm, st, ps, tau = tau), error = function(e) NULL)
+  if (is.null(pr)) return(NULL)
+  L <- tp_leverage(pr)
+  im <- tryCatch(tp_implications(pr), error = function(e) NULL)
+  det <- if (is.list(im)) im$determined else im
+  off <- upper.tri(L)
+  keep <- if (is.null(det)) off else off & !det
+  lev <- abs(L[keep])
+  z <- rd(path)
+  list(p = ncol(L), npair = sum(off),
+       lev_med = unname(stats::median(lev)), lev_max = unname(max(lev)),
+       n_above_10 = sum(lev > 0.10), n_below_05 = sum(lev < 0.05),
+       perm_hr = if (!is.null(z) && !is.null(z$perm)) unname(z$perm$p["HR"]) else NULL,
+       perm_rm = if (!is.null(z) && !is.null(z$perm)) unname(z$perm$p["RMST"]) else NULL,
+       B = if (!is.null(z) && !is.null(z$sm)) z$sm$B else NULL,
+       K = if (!is.null(z) && !is.null(z$sm)) z$sm$K else NULL)
+}
+J$plate <- list(
+  colon = plate(colon_data(), colon_criteria, colon_ps, "trt","time","status", 1825,
+                "analysis/out/colon_full.rds"),
+  rott  = plate(rott_data(),  rott_criteria,  rott_ps,  "trt","dtime","death", 2555,
+                "analysis/out/rott_fit.rds"))
+
+
+ts <- rd("analysis/out/sim_trainsize.rds")
+if (!is.null(ts)) {
+  J$trainsize <- list(
+    rows = lapply(names(ts), function(k) list(n = ts[[k]]$n_train, R = ts[[k]]$R,
+      p_lower = ts[[k]]$p_lower_hr, p_more = ts[[k]]$p_more_n,
+      p_exact = ts[[k]]$p_exact_rule, kept = ts[[k]]$mean_kept)),
+    sizes = vapply(ts, function(z) z$n_train, numeric(1)))
+}
+rt <- rd("analysis/out/sim_rule_truth.rds")
+if (!is.null(rt)) J$pop_rule <- list(
+  hr_full = exp(unname(rt$V0row_full["logHR"])), hr_rule = exp(unname(rt$V0row_rule["logHR"])),
+  n_full  = exp(unname(rt$V0row_full["logN"])),  n_rule  = exp(unname(rt$V0row_rule["logN"])),
+  rm_full = unname(rt$V0row_full["rmstD"]),      rm_rule = unname(rt$V0row_rule["rmstD"]),
+  n_kept = length(rt$keep0), p = length(rt$phi0))
+
+cl <- rd("analysis/out/confound_limits.rds")
+if (!is.null(cl)) J$confound_limits <- list(
+  rows = lapply(seq_len(nrow(cl)), function(i) as.list(cl[i, ])),
+  arms = c("randomised", "confounded, adjusted", "confounded, one unmeasured"),
+  gap_rand = unname(cl[1, "gap"]), gap_adj = unname(cl[2, "gap"]), gap_unmeas = unname(cl[3, "gap"]),
+  hr_rand = unname(cl[1, "hr_full"]), hr_adj = unname(cl[2, "hr_full"]),
+  hr_unmeas = unname(cl[3, "hr_full"]),
+  inflation = unname(cl[3, "gap"] / cl[1, "gap"] - 1))
+
+## The factorial's "concentrated vs spread" contrast also changes the size of the
+## diluting coefficient, because the per-criterion coefficients are set from one
+## magnitude. Both values are derived here from the design constants in Text S1
+## rather than being quoted from memory in the text.
+J$factorial$dil_conc <- 0.40 * 0.80          # nmod = 2 arm: gmag 0.40, enricher 0.80 * gmag
+J$factorial$dil_diff <- 0.16 * 0.80          # nmod = 5 arm: gmag 0.16, same multiplier
+
+## Differences between arrangements at each fitting size, with Monte Carlo intervals,
+## so the text does not have to quote them from the sweep printout.
+cs2 <- rd("analysis/out/concentration_sweep.rds")
+if (!is.null(cs2)) {
+  base <- cs2[["A_dil1_enr1"]]
+  J$conc_diff <- lapply(setdiff(names(cs2), "A_dil1_enr1"), function(k) {
+    z <- cs2[[k]]
+    R1 <- as.data.frame(z$rows); R0 <- as.data.frame(base$rows)
+    list(cfg = k, rows = lapply(seq_len(nrow(R1)), function(i) {
+      d  <- R1$p_lower[i] - R0$p_lower[i]
+      se <- sqrt(R1$se[i]^2 + R0$se[i]^2)
+      list(n = R1$n[i], diff = d, lo = d - 1.96*se, hi = d + 1.96*se) }))
+  })
+  names(J$conc_diff) <- setdiff(names(cs2), "A_dil1_enr1")
+}
+
+ctg <- rd("analysis/out/conc_targets.rds")
+if (!is.null(ctg)) J$conc_targets <- list(
+  rows = lapply(names(ctg), function(k) ctg[[k]]),
+  hr_full = ctg[[1]]$hr_full,
+  hr_oracle_conc = ctg[[1]]$hr_oracle, gap_conc = ctg[[1]]$gap,
+  hr_oracle_split = ctg[[length(ctg)]]$hr_oracle, gap_split = ctg[[length(ctg)]]$gap,
+  n_eval = 120000)
+
+ph <- rd("analysis/out/ph_tests.rds")
+if (!is.null(ph)) J$ph <- lapply(ph, function(z) z)
+
+## The "roughly 0.34 in standard deviation at every fixed sample size" quoted in the
+## Discussion is the mean across-scenario SD over the fixed sizes; computed, not typed.
+if (!is.null(J$fixedn$cells)) {
+  sds <- vapply(J$fixedn$cells, function(z) z$sd_all, numeric(1))
+  J$fixedn$sd_mean <- mean(sds)
+  J$fixedn$sd_min <- min(sds); J$fixedn$sd_max <- max(sds)
+}
+
+## Cohort descriptive facts that the Methods and Supplement quoted as literals:
+## the largest off-diagonal eligibility correlation, the only criterion with any
+## missingness, and the worst standardised mean difference after weighting.
+## Computed here from the cohorts so they cannot drift from the tables.
+cohort_facts <- function(dat, crit, ps, trt, tm, st, tau) {
+  E <- vapply(crit, function(f) as.numeric(f(dat)), numeric(nrow(dat)))
+  miss <- vapply(seq_along(crit), function(j) mean(is.na(E[, j])), numeric(1))
+  Ec <- E; Ec[is.na(Ec)] <- 0
+  R <- suppressWarnings(stats::cor(Ec))
+  diag(R) <- 0; R[!is.finite(R)] <- 0
+  k <- which(abs(R) == max(abs(R)), arr.ind = TRUE)[1, ]
+  pr <- tryCatch(tp_prepare(dat, crit, trt, tm, st, ps, tau = tau), error = function(e) NULL)
+  smd <- NA_real_
+  if (!is.null(pr) && !is.null(pr$X)) {
+    e <- tryCatch(fast_logit(pr$X, pr$trt), error = function(z) rep(mean(pr$trt), nrow(pr$X)))
+    e <- pmin(pmax(e, .05), .95); w <- pr$trt/e + (1-pr$trt)/(1-e)
+    smd <- max(vapply(seq_len(ncol(pr$X)), function(j) {
+      x <- pr$X[, j]; i1 <- pr$trt == 1
+      m1 <- stats::weighted.mean(x[i1], w[i1]); m0 <- stats::weighted.mean(x[!i1], w[!i1])
+      sdp <- sqrt((stats::var(x[i1]) + stats::var(x[!i1]))/2)
+      if (!is.finite(sdp) || sdp == 0) 0 else abs(m1 - m0)/sdp }, numeric(1)))
+  }
+  list(max_cor = unname(R[k[1], k[2]]),
+       max_cor_pair = paste(names(crit)[k[1]], "with", names(crit)[k[2]]),
+       n_missing = sum(miss > 0), max_missing = max(miss),
+       max_missing_name = names(crit)[which.max(miss)], max_smd = smd)
+}
+J$cohort_facts <- list(
+  colon = tryCatch(cohort_facts(colon_data(), colon_criteria, colon_ps, "trt","time","status", 1825),
+                   error = function(e) NULL),
+  rott  = tryCatch(cohort_facts(rott_data(), rott_criteria, rott_ps, "trt","dtime","death", 2555),
+                   error = function(e) NULL))
+
+## Monte Carlo standard error of the fixed-size success probabilities in Table 2.
+if (!is.null(J$factorial$table)) {
+  ft <- J$factorial$table
+  J$fixedn$mc_se_max <- max(vapply(J$fixedn$cells, function(z)
+    sqrt(0.25 / 50), numeric(1)))   # worst case at the smallest replicate count
+}
+
+psx <- rd("analysis/out/ps_specs.rds")
+if (!is.null(psx)) J$ps_specs <- lapply(psx, function(z) z)
+
+## Reviewer round 5. The Results quoted the median located threshold at reliability
+## targets of 0.70 and 0.90 as two integers with no source; no current script
+## computed them. They are computed here from the stored ladder, by the same
+## log-linear interpolation used for the 0.80 target, so all three targets come
+## from one place.
+ftr <- rd("analysis/out/factorial_threshold.rds")
+if (!is.null(ftr)) {
+  cross_at <- function(g, target) {
+    n <- vapply(g, `[[`, numeric(1), "n"); p <- vapply(g, `[[`, numeric(1), "p_lower")
+    o <- order(n); n <- n[o]; p <- p[o]
+    i <- which(p >= target)[1]
+    if (is.na(i)) return(NA_real_)          # never crosses: right-censored
+    if (i == 1L) return(NA_real_)           # already above at the smallest rung
+    x0 <- log(n[i-1]); x1 <- log(n[i]); y0 <- p[i-1]; y1 <- p[i]
+    if (y1 == y0) return(n[i])
+    exp(x0 + (target - y0) * (x1 - x0)/(y1 - y0))
+  }
+  ## Reviewer round 5: Table S2b was a typed literal, including two columns
+  ## (the concentrated/diffuse split and the censoring counts) that had no source
+  ## anywhere. Everything the table reports is computed here.
+  nmod_of <- function(z) { v <- if (!is.null(z$sc$nmod)) z$sc$nmod else z$row$nmod
+                           if (is.null(v)) NA_integer_ else as.integer(v[1]) }
+  top <- max(vapply(ftr, function(z) max(vapply(z$grid, `[[`, numeric(1), "n")), numeric(1)))
+  bot <- min(vapply(ftr, function(z) min(vapply(z$grid, `[[`, numeric(1), "n")), numeric(1)))
+  J$targets <- lapply(c(0.70, 0.80, 0.90), function(tg) {
+    v  <- vapply(ftr, function(z) cross_at(z$grid, tg), numeric(1))
+    nm <- vapply(ftr, nmod_of, integer(1))
+    pl <- lapply(ftr, function(z) vapply(z$grid, `[[`, numeric(1), "p_lower"))
+    ## right-censored: never reaches the target on the ladder.
+    ## left-censored: already at or above the target at the smallest rung.
+    left  <- vapply(pl, function(p) as.numeric(p[1] >= tg), numeric(1))
+    right <- vapply(pl, function(p) as.numeric(max(p) < tg), numeric(1))
+    conc <- nm == min(nm, na.rm = TRUE); diff_ <- !conc
+    list(target = tg, n_located = sum(is.finite(v)), n_runs = length(v),
+         n_right = sum(right == 1), n_left = sum(left == 1),
+         conc_located = sum(is.finite(v) & conc), conc_n = sum(conc),
+         diff_located = sum(is.finite(v) & diff_), diff_n = sum(diff_),
+         ladder_top = top, ladder_bottom = bot,
+         med = if (any(is.finite(v))) unname(stats::median(v[is.finite(v)])) else NA_real_)
+  })
+  names(J$targets) <- c("t70", "t80", "t90")
+}
+
+## the two evaluation-set sizes, which belong to two different simulations and were
+## quoted in the main text and the supplement without being distinguished
+J$sim_sizes <- list(conc_targets_eval = 120000L, arrangement_scoring = 60000L,
+                    trainsize_scoring = 100000L, coverage_n = 1500L)
+
+lff <- rd("analysis/out/leverage_forms_fit.rds")
+if (!is.null(lff)) {
+  e <- vapply(lff, function(z) z$rel_err, numeric(1))
+  fm <- vapply(lff, function(z) z$form, character(1))
+  J$leverage_fit <- list(
+    rows = lapply(lff, function(z) z),
+    and_max = max(abs(e[fm == "AND"])),
+    other_min = min(e[fm != "AND"]), other_max = max(e[fm != "AND"]))
+}
+
+ctr <- rd("analysis/out/cohort_table_rows.rds")
+if (!is.null(ctr)) J$criteria <- list(rows = ctr$rows, head = ctr$head)
+
+## Table S1c reports the MEDIAN over all subsets of each size, not every subset,
+## so the aggregation happens here rather than in the document.
+ovr <- rd("analysis/out/overlap_vs_restriction.rds")
+if (!is.null(ovr)) J$overlap <- lapply(ovr, function(M) {
+  M <- as.data.frame(M)
+  sizes <- sort(unique(M$size))
+  lapply(sizes, function(sz) { z <- M[M$size == sz, , drop = FALSE]
+    md <- function(v) unname(stats::median(v[is.finite(v)]))
+    list(size = sz, n_subsets = nrow(z), n = md(z$n), ess_frac = md(z$ess_frac),
+         trunc = md(z$trunc), maxsmd = md(z$maxsmd), events = md(z$events)) }) })
 
 ## ---- static facts computed here -----------------------------------------
 J$efficiency <- local({
@@ -333,6 +557,20 @@ scan_scripts <- function() {
   }
   bad
 }
+## Reviewer round 5, major point 1. Five result objects were superseded during this
+## revision but were still being read by the supplement and by Results section 2,
+## which is how two sets of estimates for the same quantity reached the reviewer.
+## They now live in analysis/out/superseded/ and this build refuses to start if any
+## of them is back in the read path.
+RETIRED <- c("split_dependence", "rmst_rule", "pareto_benchmark",
+             "random_benchmark", "snr_check")
+back <- RETIRED[file.exists(file.path("analysis/out", paste0(RETIRED, ".rds")))]
+if (length(back))
+  stop("superseded result objects are back in the read path:\n  ",
+       paste(back, collapse = "\n  "),
+       "\nMove them to analysis/out/superseded/ or delete the code that writes them there.")
+say("superseded-object check passed (", length(RETIRED), " objects retired)")
+
 bad <- scan_scripts()
 if (length(bad)) stop("endpoint check failed:\n  ", paste(bad, collapse = "\n  "))
 say("endpoint source check passed over ", length(list.files("analysis", pattern = "[.]R$")), " scripts")
@@ -345,6 +583,26 @@ if (!is.null(J$primary$colon)) {
   if (!is.null(J$nested$colon))
     chk(abs(J$primary$colon$lower - J$nested$colon$lower$point) < 0.25,
         "primary and nested colon P(lower) differ by more than 0.25")
+## Reviewer round 5, major point 1. Two secondary runs used to report their own
+## estimate of a quantity the primary analysis already reports. They now share the
+## primary run's seed, split count and split function, so the overlapping cell must
+## agree exactly; if it does not, the runs have drifted apart again.
+if (!is.null(J$colon_wt) && !is.null(J$primary$colon))
+  chk(abs(J$colon_wt$ps$lower - J$primary$colon$lower) < 1e-9,
+      sprintf("weighting sensitivity ps arm (%.4f) must reproduce the primary colon P(lower) (%.4f)",
+              J$colon_wt$ps$lower, J$primary$colon$lower))
+if (!is.null(J$horizon) && !is.null(J$primary$colon)) {
+  hz_main <- function(rows, tau0) { for (r in rows) if (isTRUE(r$tau == tau0)) return(r); NULL }
+  hc <- hz_main(J$horizon$colon, J$primary$colon$tau)
+  hr_ <- hz_main(J$horizon$rott,  J$primary$rott$tau)
+  if (!is.null(hc)) chk(abs(hc$same - J$primary$colon$same_set) < 1e-9,
+    sprintf("horizon sweep colon row at tau=%d (%.4f) must reproduce the primary agreement rate (%.4f)",
+            J$primary$colon$tau, hc$same, J$primary$colon$same_set))
+  if (!is.null(hr_)) chk(abs(hr_$same - J$primary$rott$same_set) < 1e-9,
+    sprintf("horizon sweep Rotterdam row at tau=%d (%.4f) must reproduce the primary agreement rate (%.4f)",
+            J$primary$rott$tau, hr_$same, J$primary$rott$same_set))
+}
+
 }
 writeLines(tojson(J), "analysis/out/numbers.json")
 say(sprintf("exported %d blocks", length(J)))
