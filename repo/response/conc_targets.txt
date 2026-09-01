@@ -1,0 +1,13 @@
+Is the detectable target the same under every arrangement? (N = 120 000)
+
+config           sum|g|    HR full   HR oracle        gap    elig frac oracle set
+A_dil1_enr1        0.85     0.6900      0.6698     0.0203        0.200 C1,C3,C4,C5,C6,C7,C8
+B_dil1_enr2        0.85     0.6900      0.6698     0.0203        0.200 C1,C3,C4,C5,C6,C7,C8
+C_dil1_enr4        0.85     0.6900      0.6698     0.0203        0.200 C1,C3,C4,C5,C6,C7,C8
+D_dil2_enr1        0.85     0.6900      0.6803     0.0098        0.200 C1,C4,C5,C6,C7,C8
+
+The full-protocol hazard ratio is identical by construction: under the full
+protocol every criterion is met, so the treated bonus is sum(gamma), which the
+design holds at -0.25 in all four arrangements. The oracle-relaxed hazard ratio
+and the resulting gap are NOT constrained by that and are reported above, so a
+reader can see how far the detectable target really is held fixed.

@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "trialplate: Sample-Size Diagnostics for Data-Driven Trial Eligibility Criteria"
+abstract: >-
+  Rules that relax clinical-trial eligibility criteria from real-world data make two
+  separate promises: more eligible patients, and no loss in the estimated treatment
+  effect. trialplate validates both out of sample and supplies diagnostics that are
+  computable before any outcome is examined, including a closed-form interaction
+  leverage and a detector for criteria that logically imply one another.
+type: software
+authors:
+  - given-names: Runshu
+    family-names: Wang
+    email: runshu.wang@gmail.com
+version: 0.1.0
+date-released: "2026-08-30"
+license: MIT
+repository-code: "https://github.com/USER/trialplate"
+keywords:
+  - eligibility criteria
+  - trial emulation
+  - real-world data
+  - Shapley value
+  - non-collapsibility
+  - restricted mean survival time
+  - out-of-sample validation

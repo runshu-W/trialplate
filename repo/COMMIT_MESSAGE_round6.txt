@@ -1,0 +1,59 @@
+Sixth revision: patient-level uncertainty for the three-way results, paired rule comparison, and a title that matches the evidence
+
+Two of this round's comments are the same mistake in different places: we applied a
+standard to most of the paper and then exempted the numbers we had just promoted to
+the abstract.
+
+Three-way results now carry patient-level uncertainty (major 1):
+analysis/threeway_nested.R (new) wraps the whole fit / select / test pipeline in the
+outer bootstrap over patient identifiers, with the three-way split itself taken over
+unique ids so no patient appears in more than one third. The confirmatory quantities
+now have intervals: replication rate 35.3% [0.29, 0.57] colon and 41.4% [0.25, 0.54]
+Rotterdam; the rule left undominated by every pre-selected subset 21.0% [0.04, 0.36]
+and 12.0% [0.04, 0.36]. The comparison is now against 2.5% and 2.7% from the
+SELECTION THIRD of the same design, not against the half-split 3.0% and 1.0%, which
+also change the evaluation-set size and so confound two effects.
+
+The bootstrap's own observed-data replicate differs from the point-estimate run by up
+to 0.14 across these quantities. That gap is reported in the caption and the response
+letter rather than left for a reader to find.
+
+Title and Conclusions weakened (major 2):
+Sixteen factorial scenarios establish heterogeneity among the mechanisms examined,
+not an impossibility result. The title now reads "...and why no data requirement can
+be read from cohort size alone". The Results heading, the abstract and the
+Conclusions no longer assert that no unconditional requirement EXISTS, only that none
+could be determined from cohort size, event count or effective sample size across the
+mechanisms simulated.
+
+Paired rule comparison (major 3):
+The two rules share patients and splits, so two intervals each formed against the full
+protocol cannot say which is better. nested_all.R now records the published rule's
+absolute-benefit indicator, which was missing, and forms the paired difference inside
+each split. In colon the RMST-selected variant's paired advantage is 0.024
+[-0.200, 0.356] on the restricted mean difference and -0.138 [-0.360, 0.160] on the
+hazard ratio; every interval contains zero and the paired intervals are narrower than
+the marginal ones. The paper now says the paired advantage of either rule was not
+established, and that no equivalence margin was prespecified.
+
+Simulation uncertainty and the limits of the build guard (major 4):
+Table S3b reports its replicate count and a Monte Carlo SE per probability; Table S4b
+now carries MC SEs too. The Methods no longer claim no figure can drift: the guard
+tests decimals and percentages, and 18 integer counts are asserted individually
+instead, with the build stopping if any changes.
+
+Also corrected, mostly found by re-auditing rather than by the review:
+- a Results heading and a Conclusions clause that still asserted the impossibility
+- the response letter reporting the paired difference from the wrong result key,
+  flipping its sign against the manuscript
+- the claim that the paper uses two interval procedures; it uses four, and the Monte
+  Carlo one does use a standard deviation multiplier, which the Methods had denied
+- "0.34 in standard deviation at every fixed sample size", false at two of four
+  sizes; now given as the range 0.28 to 0.39
+- Table S2's note reinstating the information-currency claim the Results withdraw
+- Text S1.6 saying four export checks run; there are six
+- two Methods counts for Rotterdam assignment (116/12) that could not be reproduced;
+  recomputed with the definition stated, 182 and 17
+- Table S3's endpoint-movement row covering 7 of 20 quantities; now all
+- the supplementary table gap at S3c, and Figure S3 appearing before S1 and S2
+- Table 1 and Figures 1-4 never cited in the main text

@@ -1,0 +1,14 @@
+
+===== colon (randomised) : full protocol, n = 176, events = 56 =====
+spec   max|SMD|      >0.10        ESS    trunc     n kept
+M1        0.011          0        172        0        176
+M2        0.026          0        166        0        176
+M3        0.026          0        166        0        176
+M4        0.058          0        165        0        172
+
+===== Rotterdam (registry) : full protocol, n = 419, events = 191 =====
+spec   max|SMD|      >0.10        ESS    trunc     n kept
+M1        0.251          6        155      132        419
+M2        0.413          6        138      181        419
+M3        0.413          6        139      181        419
+M4        0.215          5        111      181        338

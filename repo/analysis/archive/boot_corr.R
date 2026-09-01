@@ -1,0 +1,6 @@
+source("R/fastfit.R"); source("R/engine.R"); source("R/infer.R"); source("demo/datasets.R")
+prep <- tp_prepare(colon_data(), colon_criteria, "trt","time","status", colon_ps, tau=1825)
+fit  <- tp_fit(prep)
+boot <- tp_boot(prep, B = 1000L, cores = 2L)
+saveRDS(list(fit=fit, boot=boot), "out/c_bootraw.rds")
+cat("done", length(boot), "\n")

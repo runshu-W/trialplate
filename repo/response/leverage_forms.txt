@@ -1,0 +1,43 @@
+Leverage coefficient by interaction form and eligibility rate
+(coefficient multiplies the effect-modification magnitude g)
+
+form     q_i    q_j       coef  predicted   observed
+AND     0.45   0.45      0.280    -0.1682    -0.1672
+AND     0.70   0.70      0.087    -0.0524    -0.0510
+AND     0.85   0.85      0.020    -0.0120    -0.0119
+OR      0.45   0.45     -0.309     0.1854     0.1452
+OR      0.70   0.70     -0.091     0.0549     0.0430
+OR      0.85   0.85     -0.024     0.0146     0.0101
+XOR     0.45   0.45     -0.589     0.3535     0.3182
+XOR     0.70   0.70     -0.179     0.1073     0.0965
+XOR     0.85   0.85     -0.044     0.0266     0.0232
+
+Coefficient as criteria become permissive (independent criteria, q_ij = q_i q_j):
+     q        AND         OR        XOR
+  0.30      0.490     -0.490     -0.980
+  0.45      0.303     -0.302     -0.605
+  0.60      0.160     -0.160     -0.320
+  0.70      0.090     -0.090     -0.180
+  0.80      0.040     -0.040     -0.080
+  0.85      0.022     -0.022     -0.045
+  0.90      0.010     -0.010     -0.020
+  0.95      0.002     -0.003     -0.005
+
+Under independence all three are multiples of (1-q_i)(1-q_j):
+     q      (1-q)^2        AND         OR        XOR
+  0.45       0.3025     0.3025    -0.3025    -0.6050
+  0.70       0.0900     0.0900    -0.0900    -0.1800
+  0.85       0.0225     0.0225    -0.0225    -0.0450
+  0.90       0.0100     0.0100    -0.0100    -0.0200
+
+So the attenuation factor is form-independent up to sign and a constant.
+It is attenuation by a known factor, NOT disappearance: the contrast is
+shrunk, and whether the shrunken contrast is detectable remains a question
+of effect size and sample size. Only an exactly zero factor -- the logical
+implication case -- makes a cell structurally unidentifiable.
+
+Prediction accuracy: the AND coefficient is accurate to a few per cent;
+the OR and XOR coefficients are over-predicted by 10-30%% because the
+derivation ignores the reweighting and non-collapsibility that operate when
+the bonus reaches a large share of the cohort. They are order-of-magnitude
+guides, not exact.

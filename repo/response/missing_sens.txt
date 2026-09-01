@@ -1,0 +1,14 @@
+
+===== colon =====
+missing per criterion: AGE75=0 AGE40=0 NOOBS=0 NOPRF=0 NOADH=0 DIFF12=13 EXT13=0 SURG0=0 NOD4=0 (total rows affected: 13 of 619)
+convention  eligible    HR full    HR rule retained criteria
+NOTFILTER        176     0.5823     0.5352 AGE40,NOOBS,NOADH,EXT13,NOD4
+INELIGIBLE       169     0.6167     0.5352 AGE40,NOOBS,NOADH,EXT13,NOD4
+IMPUTE           176     0.5823     0.5352 AGE40,NOOBS,NOADH,EXT13,NOD4
+
+===== Rotterdam =====
+missing per criterion: AGE70=0 AGE30=0 ND9=0 NDPOS=0 SZ50=0 ERP=0 PGRP=0 YR85=0 YR90=0 (total rows affected: 0 of 2982)
+convention  eligible    HR full    HR rule retained criteria
+NOTFILTER        419     0.7085     0.5975 AGE30,ND9,NDPOS,ERP,YR85,YR90
+INELIGIBLE       419     0.7085     0.5975 AGE30,ND9,NDPOS,ERP,YR85,YR90
+IMPUTE           419     0.7085     0.5975 AGE30,ND9,NDPOS,ERP,YR85,YR90

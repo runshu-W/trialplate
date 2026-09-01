@@ -1,0 +1,21 @@
+(a) Proportional hazards, Grambsch-Therneau test on the treatment term
+
+cohort       cohort definition             n   events    p (zph)
+colon        whole cohort                619      291     0.2758
+colon        full protocol               176       56     0.3118
+rott         whole cohort               2982     1272     0.2808
+rott         full protocol               419      191     0.7697
+
+  A small p indicates the hazard ratio is not constant over follow-up. Where
+  that holds, the Cox coefficient is a follow-up-weighted average rather than
+  a constant effect, and the restricted mean difference carried alongside it
+  is the estimand with an unambiguous reading.
+
+(b) colon is randomised: does estimating a propensity model matter?
+
+  estimated PS (main analysis) HR full 0.5823 | HR rule 0.5352 | retains AGE40,NOOBS,NOADH,EXT13,NOD4
+  known randomisation prob     HR full 0.5940 | HR rule 0.5474 | retains AGE40,NOADH,EXT13,NOD4
+  unweighted                   HR full 0.5951 | HR rule 0.5478 | retains AGE40,NOADH,EXT13,NOD4
+
+  If the three rows agree, the selection and the headline hazard ratios do not
+  depend on estimating a propensity model in the randomised cohort.

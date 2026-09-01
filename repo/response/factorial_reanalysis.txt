@@ -1,0 +1,56 @@
+(a) Success probability at FIXED fitting size, all 16 scenarios
+    concentrated = effect modification in 1-2 criteria; diffuse = spread over 5
+
+   n_fit   runs concentrated: median [min,max]    diffuse: median [min,max]
+     600     16            0.54 [0.19, 0.88]            0.04 [0.00, 0.25]
+    2000     16            0.70 [0.45, 0.93]            0.08 [0.00, 0.41]
+    6000     16            0.91 [0.57, 0.99]            0.13 [0.00, 0.71]
+   18000     16            0.99 [0.66, 1.00]            0.27 [0.00, 0.78]
+
+    Monte Carlo SE of each cell probability is at most 0.071 (R = 50 at the smallest rung)
+
+(b) Spread of the success probability across scenarios at fixed size,
+    with a bootstrap interval over scenarios
+
+   n_fit  SD across                 95% CI
+     600      0.279         [0.179, 0.340]
+    2000      0.326         [0.244, 0.373]
+    6000      0.391         [0.298, 0.434]
+   18000      0.370         [0.254, 0.431]
+
+(c) Interval-censored regression of log threshold on the six factors
+    right-censored runs contribute (18000, Inf); the left-censored run (0, 600)
+
+  runs: 6 exact, 9 right-censored, 1 left-censored
+
+  multiplicative effect on the threshold (exp of coefficient), lognormal AFT
+term           x threshold     95% lo     95% hi
+nmod5                  NA         NA         NA
+p8                   0.37       0.02       5.75
+retain0.12           0.04       0.00       0.68
+crate0.18            0.04       0.00       0.73
+alloc0.25           40.07       2.45     656.10
+confTRUE             0.25       0.02       3.79
+
+  The concentration factor is the only term whose interval excludes 1.
+
+(d) Is the events / ESS currency really worse? Same question, without
+    conditioning on an observable threshold: spread of the success
+    probability across scenarios at a fixed EVENT count and a fixed ESS.
+
+  binned by events:
+    [13,105]               n cells  16  P(lower) SD 0.333
+    (105,291]              n cells  16  P(lower) SD 0.354
+    (291,710]              n cells  16  P(lower) SD 0.401
+    (710,3.86e+03]         n cells  16  P(lower) SD 0.301
+  binned by ess:
+    [33.3,163]             n cells  16  P(lower) SD 0.275
+    (163,537]              n cells  16  P(lower) SD 0.352
+    (537,1.62e+03]         n cells  16  P(lower) SD 0.374
+    (1.62e+03,5.39e+03]    n cells  16  P(lower) SD 0.372
+
+  Compare with binning by fitting patients:
+    n = 600                n cells  16  P(lower) SD 0.279
+    n = 2000               n cells  16  P(lower) SD 0.326
+    n = 6000               n cells  16  P(lower) SD 0.391
+    n = 18000              n cells  16  P(lower) SD 0.370

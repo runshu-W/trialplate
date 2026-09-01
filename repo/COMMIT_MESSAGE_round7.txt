@@ -1,0 +1,106 @@
+Seventh revision: treat the nested intervals as approximate, show what the
+split count does and does not change, and stop the currency comparison
+claiming more than sixteen scenarios can carry
+
+The first reviewer comment is the sharpest statistical criticism this paper
+has had. The nested bootstrap draws B outer resamples and takes R inner
+splits inside each, so the quantity it resamples is an R-split estimator
+while the reported point estimates use 400 or 500 splits. Its percentile
+interval therefore carries the inner Monte Carlo variance on top of the
+population variance and is too wide by that amount. We had recorded the
+symptom -- the bootstrap's own observed-data replicate differs from the
+point estimate by up to 0.14 -- and left a sentence standing in Text S1.6
+saying the two could not disagree. Both cannot be true.
+
+What the revision does about it.
+
+analysis/split_converge.R (new) runs the observed-data estimator at a
+ladder of split counts on the colon cohort, using each design's own
+point-estimate seed and split count so the table is a prefix of the
+reported run and its largest column reproduces the reported point rather
+than contradicting it. It reports the per-split spread, the implied Monte
+Carlo standard deviation s/sqrt(R), and -- this is the part that carries
+the argument -- the observed standard deviation and mean of independent
+R-split estimates formed by cutting the long run into disjoint blocks.
+s/sqrt(R) alone is an identity once s is fixed and is evidence for
+nothing; the block statistics are observed, and the flatness of the block
+means in R is the empirical form of the fact that these estimators are
+averages over independent splits, so the split count changes their
+variance and not their expectation. The difference between the bootstrap's
+statistic and the reported one is a variance difference, which deflation
+can address, not a bias, which it could not.
+
+analysis/export_numbers.R now produces, for every out-of-sample
+probability, a deflated percentile interval alongside the raw one: each
+outer replicate is shrunk toward the mean by sqrt((v_tot - v_mc)/v_tot)
+before the percentiles are taken. Where the estimated inner variance is at
+least the total spread the outer component is not estimable, and the
+tables print a dash rather than a degenerate point. It also reports the
+Monte Carlo standard error of the 2.5% and 97.5% endpoints themselves,
+obtained by resampling the outer replicates -- in the note to Table S3 and
+in a row of its own in Table S3c, which is drawn from the smaller outer
+count and is where the comment bites hardest.
+
+The claims are downgraded to match. The abstract and Methods say the
+intervals are approximate, that they carry inner Monte Carlo variance, and
+that their coverage against a known population is not established; the
+Shapley sign step is a non-smooth selection step for which we would not
+assume nominal coverage. "Confirmatory" is withdrawn from the manuscript
+and the supplement. The three-way comparison is against the selection
+third of the same design rather than against half-split figures that also
+change the size of the evaluation set.
+
+The second comment concerns the information-currency comparison. Sixteen
+scenarios binned into quartiles cannot establish that patients, events and
+effective sample size are equivalent, and we no longer write as though
+they could. New Table S2c gives the bin edges, the rows and distinct
+scenarios in each bin, the within-bin standard deviations and the exact
+aggregation, and states the structural feature that makes the comparison
+awkward: binning by fitting patients recovers the four fitting sizes
+exactly, while the other two currencies mix scenarios and sizes. A cluster
+bootstrap over the sixteen scenarios supplies an interval for the
+difference.
+
+Minors. Table S1f gives the full criterion correlation matrix for each
+cohort, which Table S1 had summarised by its largest off-diagonal value.
+Table S1d reports how often a comparator ties the rule exactly. The
+uncertainty paragraph no longer opens with an unconditional statement
+about bias-corrected intervals. The RMST-rule direction is stated
+unambiguously. The title takes the reviewer's wording.
+
+Corrections found by our own audit rather than by the review:
+
+- The cluster-bootstrap currency difference had been reported as the
+  bootstrap MEAN rather than the observed difference. The quartile edges
+  are recut inside each replicate, so the two disagree -- here in sign.
+  The point estimates are now the observed differences, the bootstrap
+  supplies only the intervals, and Table S2c states the gap.
+- "Spreading the enrichment never hurts" is not what Table S4 shows: the
+  effect is established at 6000 fitting patients only, and at 600 the
+  point estimates run the other way.
+- "The effective-sample-size fraction is flat in the number of criteria"
+  is a monotone decline, small but not absent. The size of the decline
+  was always the point; the text now says so.
+- Table S3 gave four matching tolerances on the hazard ratio but only one
+  on the restricted mean, while the text claimed both estimands at all
+  four. The three missing rows are added, as is the published rule's
+  probability of a greater restricted mean difference with its interval.
+- The Methods said six interval procedures and the Results said four.
+- The eligibility promise across the fitting-size ladder is not monotone
+  and its minimum is not at the smallest rung.
+- The factor by which correctly adjusted confounding raises the sample
+  requirement depends on the reliability target; the target is now named.
+- The provenance check's exemptions -- whitelist matching by value,
+  monospaced model specifications, and figures written in words or
+  exponent form -- are disclosed in the Methods and in Text S1.6 rather
+  than living only in a code comment.
+- The claim that a single script supplies every observed-cohort point
+  estimate is scoped to the quantities it actually covers, with the other
+  tables' scripts named.
+- Response letters one to four now carry the current title, as five and
+  six already did. Letter two reads three retired result objects; the
+  values it quoted are preserved in it as literals, transcribed from the
+  letter as built, so it still builds and still says what it said.
+
+Author names, affiliations, funding, competing interests, the contribution
+statement and the repository URL remain placeholders.
