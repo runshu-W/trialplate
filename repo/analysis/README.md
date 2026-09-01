@@ -214,6 +214,38 @@ monotone in the fitting size and its minimum is not at the smallest rung; and th
 factor by which correctly adjusted confounding raises the sample requirement depends on
 the reliability target, so the target is now named.
 
+### Added in the eighth revision
+
+No new scripts. The eighth review's central point was that the deflated interval was
+never a validated 95% patient-level interval and should stop being used as one, and
+the changes are to what the exporter produces and what the text claims.
+
+`export_numbers.R`:
+
+- `ci_pair()` now also returns the central 80% range (`ci80`, `ci80_deflated`) and the
+  Monte Carlo standard error of *its* endpoints (`ci80_se`), plus `n_outer`. At the
+  outer counts this study can afford, the 2.5 and 97.5 points rest on the fourth and
+  the third replicate from each end; the 10 and 90 points rest on the fifteenth and
+  the tenth. The tables lead with the central range and print the wider span to one
+  decimal.
+- The cluster bootstrap over factorial scenarios (`currency_diff`) is **removed**, not
+  caveated. Sixteen resolution-IV design points are not clusters drawn from a
+  population of mechanisms, so resampling them with replacement referred to nothing;
+  it also broke the factorial balance, and because the quartile edges were recut
+  inside every replicate it did not resample the same statistic. `currency_loso`
+  replaces it: a leave-one-scenario-out sweep under the fixed design, which makes no
+  population claim.
+
+A note on `deflation_estimable == FALSE`. It means `v_total - v_mc <= 0`, and the only
+correct reading is that the patient-level variance component is **not identifiable at
+this Monte Carlo precision**. It is not evidence that the component is zero, and not
+evidence that the inner term accounts for the whole spread. Both of those readings
+appeared in earlier revisions and are withdrawn.
+
+Terminology, enforced in the prose rather than the code: these quantities are
+**patient-resampled ranges**, never intervals. No claim in the paper turns on whether
+one of them covers 0.5, or 0, or any other value.
+
 `sim_dgp.R` holds the generating process for the planted-interaction simulations.
 Its header records why the first version of that design planted no detectable
 signal — the reason turned into the interaction-leverage result, so it is kept.

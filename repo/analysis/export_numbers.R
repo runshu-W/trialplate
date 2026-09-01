@@ -125,38 +125,45 @@ if (!is.null(fr)) {
     currency_detail = list(patients = spread_detail(rows$n, "fitting patients"),
                            events   = spread_detail(rows$events, "full-protocol events"),
                            ess      = spread_detail(rows$ess, "effective sample size")),
-    ## Reviewer round 7: the comparison had no uncertainty on the DIFFERENCE between
-    ## currencies. Each scenario contributes one row per fitting size, so the
-    ## resampling unit is the scenario, not the row. A cluster bootstrap over the
-    ## sixteen scenarios gives the interval. With sixteen clusters this is itself
-    ## imprecise, which is the point: the comparison cannot separate the currencies.
-    currency_diff = local({
+    ## Reviewer round 8, major point 3. The previous version put a cluster bootstrap
+    ## over the sixteen scenarios on the DIFFERENCE between currencies. That was the
+    ## wrong device and we withdraw it. The sixteen scenarios are the fixed design
+    ## points of a resolution-IV fractional factorial, not clusters drawn from a
+    ## population of mechanisms, so resampling them with replacement has no sampling
+    ## population to refer to; it also destroys the factorial balance, and because
+    ## the quartile edges are recut inside every replicate it does not even resample
+    ## the same statistic -- which is why its mean fell on the other side of zero
+    ## from the observed difference.
+    ##
+    ## What the fixed design does support is a sensitivity analysis: recompute the
+    ## three summaries with each scenario left out in turn, and report how far the
+    ## differences move. That makes no claim about a population of mechanisms and
+    ## answers the question a reader actually has, which is whether one or two
+    ## scenarios are driving the similarity.
+    currency_loso = local({
       sp <- function(d, v) { q <- stats::quantile(v, c(0,.25,.5,.75,1), na.rm = TRUE)
         z <- cut(v, unique(q), include.lowest = TRUE)
         mean(tapply(d$p_lower, z, stats::sd), na.rm = TRUE) }
-      runs <- unique(rows$run); B <- 2000L
-      ## The observed (plug-in) differences, which are what the table above shows.
-      obs_ev <- sp(rows, rows$events) - sp(rows, rows$n)
-      obs_es <- sp(rows, rows$ess)    - sp(rows, rows$n)
-      set.seed(7)
-      D <- t(vapply(seq_len(B), function(b) {
-        pick <- sample(runs, length(runs), replace = TRUE)
-        d <- do.call(rbind, lapply(pick, function(r) rows[rows$run == r, , drop = FALSE]))
-        c(ev = sp(d, d$events) - sp(d, d$n), es = sp(d, d$ess) - sp(d, d$n))
-      }, numeric(2)))
-      qq <- function(x) unname(stats::quantile(x[is.finite(x)], c(.025,.975)))
-      ## An earlier version reported mean(D) as the point estimate. That is the
-      ## bootstrap mean, not the statistic: resampling scenarios with replacement
-      ## re-cuts the quartile bins on a duplicated sample, which shifts the
-      ## within-bin spread, so the bootstrap mean sits away from the plug-in value
-      ## and here even on the other side of zero. The point estimate is now the
-      ## plug-in difference and the bootstrap supplies only the interval; the gap
-      ## between the two is exported so the table can state it.
-      list(n_clusters = length(runs), B = B,
-           events_minus_patients = obs_ev, ci_events = qq(D[, "ev"]),
-           ess_minus_patients    = obs_es, ci_ess    = qq(D[, "es"]),
-           boot_mean_events = mean(D[, "ev"], na.rm = TRUE),
-           boot_mean_ess    = mean(D[, "es"], na.rm = TRUE))
+      runs <- sort(unique(rows$run))
+      obs <- c(pat = sp(rows, rows$n), ev = sp(rows, rows$events), es = sp(rows, rows$ess))
+      L <- lapply(runs, function(r) {
+        d <- rows[rows$run != r, , drop = FALSE]
+        p <- sp(d, d$n); e <- sp(d, d$events); s2 <- sp(d, d$ess)
+        list(run = r, patients = p, events = e, ess = s2,
+             d_events = e - p, d_ess = s2 - p)
+      })
+      de <- vapply(L, function(z) z$d_events, numeric(1))
+      ds <- vapply(L, function(z) z$d_ess,    numeric(1))
+      list(n_scenarios = length(runs), rows = L,
+           obs_patients = unname(obs["pat"]), obs_events = unname(obs["ev"]),
+           obs_ess = unname(obs["es"]),
+           events_minus_patients = unname(obs["ev"] - obs["pat"]),
+           ess_minus_patients    = unname(obs["es"] - obs["pat"]),
+           range_events = c(min(de), max(de)), range_ess = c(min(ds), max(ds)),
+           max_abs_events = max(abs(de)), max_abs_ess = max(abs(ds)),
+           ## the scenario whose omission moves each difference furthest
+           worst_events = runs[which.max(abs(de - (obs["ev"] - obs["pat"])))],
+           worst_ess    = runs[which.max(abs(ds - (obs["es"] - obs["pat"])))])
     }))
 }
 cs <- rd("analysis/out/concentration_sweep.rds")
@@ -226,25 +233,36 @@ J$primary <- list(colon = prm("colon"), rott = prm("rott"))
 ## independent of the outer draw and additive in variance, which is what the variance
 ## decomposition already assumes. It is reported alongside the raw interval, never
 ## instead of it, and the text says which is which.
+## Reviewer round 8, major point 4. At 100 to 150 outer replicates the 2.5% and
+## 97.5% points rest on about the third and the third-from-last replicate, so they
+## are the worst-determined summary the distribution can offer. We therefore also
+## return the central 80% range, whose endpoints rest on the tenth and the
+## tenth-from-last, and the tables lead with that.
 ci_pair <- function(x, v_tot, v_mc, nboot = 2000L) {
   x <- x[is.finite(x)]; if (length(x) < 10) return(NULL)
-  qs <- c(.025, .975)
-  raw <- unname(stats::quantile(x, qs))
-  ## When the estimated inner Monte Carlo variance is at least the total spread, the
-  ## outer-sampling component is not estimable: the data are consistent with there
-  ## being none, and a deflated interval would be a point. We return NULL for the
-  ## deflated interval in that case rather than printing a zero-width one, and the
-  ## tables show a dash. This happens for quantities that are nearly constant across
-  ## resamples, where almost all of the spread is split-to-split noise.
+  qs <- c(.025, .975); q8 <- c(.10, .90)
+  raw  <- unname(stats::quantile(x, qs))
+  raw8 <- unname(stats::quantile(x, q8))
+  ## Reviewer round 8, major point 2. When the estimated inner Monte Carlo variance
+  ## is at least the total spread across resamples, the subtraction returns a
+  ## non-positive outer-sampling variance. The correct reading is that the
+  ## patient-level component is NOT IDENTIFIABLE at this Monte Carlo precision --
+  ## not that it is zero, and not that the inner term accounts for all of the
+  ## spread. We return no deflated range in that case and the tables show a dash.
   estimable <- is.finite(v_tot) && v_tot > 0 && v_mc < v_tot
   fac <- if (estimable) sqrt((v_tot - v_mc) / v_tot) else NA_real_
   mu  <- mean(x)
-  def <- if (estimable) unname(stats::quantile(mu + (x - mu) * fac, qs)) else NULL
-  ## endpoint Monte Carlo error: how much the endpoints move if the outer replicates
-  ## themselves are resampled
-  E <- replicate(nboot, stats::quantile(sample(x, replace = TRUE), qs))
-  list(raw = raw, deflated = def, shrink = fac, estimable = estimable,
-       se_lo = stats::sd(E[1, ]), se_hi = stats::sd(E[2, ]))
+  def  <- if (estimable) unname(stats::quantile(mu + (x - mu) * fac, qs)) else NULL
+  def8 <- if (estimable) unname(stats::quantile(mu + (x - mu) * fac, q8)) else NULL
+  ## endpoint Monte Carlo error: how much each endpoint moves if the outer
+  ## replicates themselves are resampled. Reported for both ranges so a reader can
+  ## see directly how much better determined the inner one is.
+  E  <- replicate(nboot, stats::quantile(sample(x, replace = TRUE), qs))
+  E8 <- replicate(nboot, stats::quantile(sample(x, replace = TRUE), q8))
+  list(raw = raw, deflated = def, raw80 = raw8, deflated80 = def8,
+       shrink = fac, estimable = estimable, n_outer = length(x),
+       se_lo = stats::sd(E[1, ]), se_hi = stats::sd(E[2, ]),
+       se80_lo = stats::sd(E8[1, ]), se80_hi = stats::sd(E8[2, ]))
 }
 
 ## ---- round-3 additions ---------------------------------------------------
@@ -270,9 +288,13 @@ nst <- function(lab) {
          sd_outer = sqrt(max(vt - vm, 0)), conv = unname(mv),
          ci = if (!is.null(cp)) cp$raw else unname(stats::quantile(x, c(.025,.975))),
          ci_deflated = if (!is.null(cp)) cp$deflated else NULL,
+         ci80 = if (!is.null(cp)) cp$raw80 else unname(stats::quantile(x, c(.10,.90))),
+         ci80_deflated = if (!is.null(cp)) cp$deflated80 else NULL,
          shrink = if (!is.null(cp)) cp$shrink else NA_real_,
          deflation_estimable = if (!is.null(cp)) cp$estimable else NA,
-         ci_se = if (!is.null(cp)) c(cp$se_lo, cp$se_hi) else NULL) }
+         n_outer = if (!is.null(cp)) cp$n_outer else sum(is.finite(x)),
+         ci_se = if (!is.null(cp)) c(cp$se_lo, cp$se_hi) else NULL,
+         ci80_se = if (!is.null(cp)) c(cp$se80_lo, cp$se80_hi) else NULL) }
   out <- list(B = z$B_OUT, R = z$R_IN, bands = z$BANDS, margin = z$MARGIN,
               more = g("more"), lower = g("lower"),
               front_hr = g("front_hr"), front_rm = g("front_rm"), front_hrM = g("front_hrM"),
@@ -638,9 +660,13 @@ twn <- function(lab) {
          sd_outer = sqrt(max(vt - vm, 0)), conv = unname(mv),
          ci = if (!is.null(cp)) cp$raw else unname(stats::quantile(x, c(.025,.975))),
          ci_deflated = if (!is.null(cp)) cp$deflated else NULL,
+         ci80 = if (!is.null(cp)) cp$raw80 else unname(stats::quantile(x, c(.10,.90))),
+         ci80_deflated = if (!is.null(cp)) cp$deflated80 else NULL,
          shrink = if (!is.null(cp)) cp$shrink else NA_real_,
          deflation_estimable = if (!is.null(cp)) cp$estimable else NA,
-         ci_se = if (!is.null(cp)) c(cp$se_lo, cp$se_hi) else NULL) }
+         n_outer = if (!is.null(cp)) cp$n_outer else sum(is.finite(x)),
+         ci_se = if (!is.null(cp)) c(cp$se_lo, cp$se_hi) else NULL,
+         ci80_se = if (!is.null(cp)) c(cp$se80_lo, cp$se80_hi) else NULL) }
   out <- list(B = z$B_OUT, R = z$R_IN, margin = z$MARGIN)
   for (nm in c("repro","reproM","front_sel","front_conf","front_test","best_holds",
                "n_domB","n_survive","n_domC")) out[[nm]] <- g(nm)

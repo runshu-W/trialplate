@@ -44,6 +44,9 @@ const ALLOWED = new Map(Object.entries({
   "0.180": "censoring-rate factor level in the factorial",
   "0.85":  "eligibility rate in the leverage verification",
   "0.15":  "largest matching tolerance, a design choice",
+  "80%":   "width of the central patient-resampled range, a reporting choice",
+  "2.5%":  "percentile point of the wider patient-resampled range, a reporting choice",
+  "97.5%": "percentile point of the wider patient-resampled range, a reporting choice",
   "0.02":  "smallest matching tolerance, a design choice",
   "1.96":  "normal quantile",
   "2.5":   "percentile interval endpoint",
@@ -65,7 +68,7 @@ const ALLOWED = new Map(Object.entries({
 /* Live document sources: the manuscript, the supplement, and the response letter
  * for the current round. These must contain no transcribed figure. */
 const FILES = ["make.js", "part2.js", "part3.js", "supp.js", "build.js", "refs.js",
-               "response7.js"];
+               "response8.js"];
 
 /* Earlier response letters are a historical record of what was claimed at the time,
  * including claims later corrected. Rewriting them to read from today's result file
@@ -73,7 +76,7 @@ const FILES = ["make.js", "part2.js", "part3.js", "supp.js", "build.js", "refs.j
  * scanned. They are listed here so the exemption is visible rather than silent, and
  * the check reports it on every run. */
 const HISTORICAL = ["response.js", "response2.js", "response3.js", "response4.js",
-                    "response5.js", "response6.js"];
+                    "response5.js", "response6.js", "response7.js"];
 
 /* A response letter has to be able to quote the wrong value it is correcting.
  * Those quotations are listed here explicitly rather than being exempted by a

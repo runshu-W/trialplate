@@ -11,6 +11,18 @@ const PR=NUM.primary||{}, NS=NUM.nested||{}, TW=NUM.threeway||null,
       TN=(NUM.threeway_nested&&NUM.threeway_nested.colon)?NUM.threeway_nested:null,
       CV=NUM.converge||null, TIE=NUM.ties||null, FXD=NUM.fixedn||{},
       OVC=(NUM.overlap||{}).colon||null;
+/* This letter quoted the cluster bootstrap over factorial scenarios, which the
+ * eighth revision withdrew: sixteen fixed design points are not clusters drawn from
+ * a population of mechanisms, so the interval had no sampling population to refer
+ * to. The object no longer exists in the result file. The letter is the record of
+ * what was said at the time, so the values it quoted are preserved here as literals
+ * rather than silently becoming dashes. Nothing here feeds the manuscript. */
+if (!NUM.fixedn.currency_diff) NUM.fixedn.currency_diff = {
+  n_clusters: 16, B: 2000,
+  events_minus_patients: 0.0057, ci_events: [-0.043, 0.028],
+  ess_minus_patients:    0.0018, ci_ess:    [-0.039, 0.025],
+  boot_mean_events: -0.0013, boot_mean_ess: -0.0024
+};
 const f=(x,k=3)=>(x===null||x===undefined||!isFinite(x))?"—":Number(x).toFixed(k);
 const f0=x=>f(x,0); const pct=(x,k=1)=>(x===null||x===undefined||!isFinite(x))?"—":(100*Number(x)).toFixed(k)+"%";
 const C=PR.colon||{}, R=PR.rott||{};

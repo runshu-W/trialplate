@@ -1,0 +1,95 @@
+Eighth revision: stop calling the nested quantities intervals, withdraw the
+cluster bootstrap over factorial design points, and lead with the range the
+outer counts can actually determine
+
+The first comment was that the variance-deflated interval is not a validated
+95% patient-level interval and should not be used as one. The shrinkage
+matches a second moment; it does not in general recover the quantiles of the
+patient-sampling distribution from the convolution of that distribution with
+Monte Carlo noise, and these statistics are bounded proportions produced by
+a procedure containing a Shapley sign step and a frontier selection, neither
+smooth. We had said coverage was not established and then reasoned from
+whether an interval covered one half, which is using an uncalibrated
+interval as a formal inferential tool. The reviewer offered two remedies and
+preferred the second at our compute; so do we.
+
+These quantities are now PATIENT-RESAMPLED RANGES throughout. The phrases
+"95% interval", "confidence interval" and "patient-level interval" appear
+only where they are being disclaimed. Every conclusion that turned on where
+a range endpoint fell is gone: from the abstract, from the matched
+comparison, from the paired rule comparison, from the Discussion and
+Conclusions and from the table notes. What replaces them is a statement of
+how wide the range is and that it straddles the value in question, with no
+claim about any population value.
+
+A non-positive v_total - v_mc now reads as the patient-level variance
+component being NOT IDENTIFIABLE at this Monte Carlo precision. Earlier
+revisions read it first as the quantity being nearly constant and then as
+the inner term accounting for the whole spread. Both are withdrawn in the
+Results, in Table S3 and in Table S3c, each of which says so.
+
+The cluster bootstrap over the sixteen factorial scenarios is withdrawn.
+They are the fixed design points of a resolution-IV fractional factorial,
+not clusters drawn from a population of mechanisms; resampling them with
+replacement had no sampling population to refer to, destroyed the factorial
+balance, and because the quartile edges were recut inside each replicate did
+not resample the same statistic. Table S2c now carries a leave-one-scenario-
+out sensitivity analysis under the fixed design, and the claim is the
+reviewer's: the three chosen descriptive summaries were numerically similar
+under this particular binning scheme. The table adds that omitting one
+scenario reverses the sign of the small events-minus-patients difference, so
+that sign carries no information.
+
+At 150 and 100 outer replicates the 2.5 and 97.5 points rest on the fourth
+and third replicate from each end. The central 80% range now leads
+everywhere, its endpoints resting on the fifteenth and tenth; the wider span
+is kept but printed to one decimal, and the Monte Carlo error of both is
+reported. The counts behind the ranges are 149 and 99, not the nominal 150
+and 100, and that is now disclosed.
+
+Table S1e no longer says it licenses the deflation. It closes with what it
+does not establish: it runs on colon only, so the same correction on the
+Rotterdam ranges is unvalidated; several of its observed spreads rest on two
+to five blocks; flat block means are arithmetic rather than an independent
+test of unbiasedness; and a variance law says nothing about the coverage of
+a linearly shrunken quantile.
+
+Minors: "too wide" becomes "carries inner Monte Carlo variance that patient
+sampling alone would not", since with coverage unknown we cannot promise the
+observed range is conservative. "Accepted in full" is replaced by a
+statement of what was and was not done. The Results subheading matches the
+title. Table precision matches the reported endpoint errors, including an
+admission that the second decimal of the central range is not determined
+either and is kept only to keep narrow ranges distinguishable.
+
+Found by our own audit of the redraft, and reported in the letter:
+
+- A Methods sentence comparing three propensity weightings still called a
+  range an interval, printed it to two decimals and concluded from the fact
+  that it contained all three estimates. The conclusion was empty as well:
+  the estimates differ by 0.018 and the range is 0.65 wide.
+- The replacement wording was itself an over-claim. "Moves across most of
+  the distance between chance and certainty" is false of a range about a
+  third of a unit wide, and it concealed that the range extends below one
+  half as well as above. Two further sentences said the ranges reached "well
+  past" one half and zero, where the margins are about 0.05; those read as
+  the tests we had just deleted.
+- The leading claim's arithmetic was wrong: at 150 replicates the tenth
+  percentile is the fifteenth order statistic, not the tenth.
+- Table S1e still carried a coverage claim ("the anti-conservative of the
+  two") fifty lines above the paragraph saying the table cannot speak to
+  coverage, resting on an observed-to-implied ratio range of 0.7 to 1.0 when
+  the table's own cells run 0.6 to 2.5.
+- The Methods counted four interval procedures including the coefficient
+  intervals of the interval-censored regression; that table prints no
+  coefficients and no intervals. The count is three.
+- Table S3's deflated ranges can sit wholly to one side of the point
+  estimate beside them, because they are centred on the bootstrap's own
+  noisier mean. That is now explained in the note rather than left to look
+  like an error.
+- The dash means different things in Table S1e and in Tables S3 and S3c;
+  each now says which.
+- Table S1e was never cited in the manuscript. It is now.
+
+Author names, affiliations, funding, competing interests, the contribution
+statement and the repository URL remain placeholders.
