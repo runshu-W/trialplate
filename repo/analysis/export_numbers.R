@@ -686,6 +686,45 @@ if (!is.null(J$threeway_nested$colon) && !is.null(J$threeway)) {
 tie <- rd("analysis/out/comparator_ties.rds")
 if (!is.null(tie)) J$ties <- tie
 
+## Reviewer round 10, point 3. An inner split can fail to define a statistic --
+## there may be no comparator inside the matching band, or no dominator to
+## reproduce -- so a replicate's mean is taken over the splits that do define it and
+## the Monte Carlo term uses that replicate's own usable count. The counts were only
+## in the result file; they are exported here so the supplement can report them.
+usable <- local({
+  one <- function(file, design, lab) {
+    z <- rd(file); if (is.null(z) || is.null(z$K)) return(NULL)
+    Kb <- z$K[-1, , drop = FALSE]          # the observed-data row is not a resample
+    q <- lapply(colnames(Kb), function(nm) {
+      u <- Kb[, nm]
+      list(quantity = nm, min = min(u), median = stats::median(u), max = max(u),
+           n_below = sum(u < z$R_IN), n_zero = sum(u == 0))
+    })
+    short <- Filter(function(u) u$min < z$R_IN, q)
+    list(design = design, cohort = lab, R_nominal = z$R_IN, n_resamples = nrow(Kb),
+         quantities = q, short = short,
+         min_any = min(Kb), n_full_cols = sum(apply(Kb, 2, min) == z$R_IN),
+         n_cols = ncol(Kb), n_zero_any = sum(Kb == 0),
+         ## the statistic whose definition fails most often, so the text need not
+         ## name it by hand
+         worst = if (length(short)) short[[which.min(vapply(short, function(u) u$min, numeric(1)))]]$quantity else NA_character_,
+         all_full = sum(apply(Kb, 2, min) == z$R_IN) == ncol(Kb))
+  }
+  out <- list(two_colon = one("analysis/out/nested_colon.rds", "two-way", "colon"),
+              two_rott  = one("analysis/out/nested_rott.rds",  "two-way", "rott"),
+              three_colon = one("analysis/out/threeway_nested_colon.rds", "three-way", "colon"),
+              three_rott  = one("analysis/out/threeway_nested_rott.rds",  "three-way", "rott"))
+  out[!vapply(out, is.null, logical(1))]
+})
+## Unconditional: if one of the four objects is missing or predates the usable-count
+## bookkeeping, that is a reason to stop, not to skip the check.
+stopifnot(length(usable) == 4L)
+J$usable <- usable
+stopifnot(all(vapply(usable, function(z) z$n_zero_any == 0L, logical(1))))
+say(sprintf("usable-split check passed over 4 result objects: no statistic is undefined in a whole resample; smallest usable count %d of %d",
+            min(vapply(usable, function(z) z$min_any, numeric(1))),
+            usable[[1]]$R_nominal))
+
 ## Reviewer round 7, major point 1: convergence of the split-count estimator.
 scv <- rd("analysis/out/split_converge.rds")
 ## The object now carries the raw per-split values alongside the summary rows, so it

@@ -1,0 +1,83 @@
+Tenth revision: stop attributing the range width to cohort composition,
+report the counts the ranges actually rest on, and put the usable
+inner-split counts in the paper
+
+The Methods said the observed range carries both patient-resampling
+variability and the Monte Carlo noise of a 25-split estimator, and the
+Results then attributed the whole width to which patients happen to be in
+the cohort. Both sentences the reviewer named are rewritten, and so are the
+three others that said the same thing more quietly. The Results now report
+the width of the combined resampling-and-splitting procedure, state that
+the width is not attributable to the patients alone, and — where the paper
+does attribute something to patient sampling — point at the identifiable
+outer-sampling standard deviation (0.117 and 0.090 against totals of 0.128
+and 0.105 for the matched comparison) rather than at the total width. The
+paired paragraph adds that the inner Monte Carlo component is a larger
+share of the total for the paired quantities than for the marginal ones, so
+the narrower paired widths are not patient-level variability either.
+
+Tables S3 and S3c no longer call 150 and 100 "outer resamples". The row now
+reads "bootstrap resamples x inner splits, forming the ranges" at 149 x 25
+and 99 x 25, with a row beneath giving the one observed-data evaluation
+held out of the ranges. Four places in the prose that still quoted the
+nominal counts are corrected with it, including inside Table S3's own note.
+
+On the unusable inner splits, the four questions have four definite
+answers, and the machinery was already doing the right thing without ever
+saying so. A resample's value for a statistic is the mean over the splits
+that define it. The R in s squared over R is that resample's own usable
+count, never the nominal one. No statistic is undefined in a whole
+resample anywhere, so every resample contributes to every range, and the
+export now asserts that over all four result objects unconditionally.
+New Supplementary Table S1g gives the counts under the names the paper uses
+for the statistics rather than their column names in the result file.
+
+Frequency turned out to matter more than depth, and our first draft of that
+table reported only the minimum and the median, which made the shortfall
+look occasional. It is not. The margin-constrained three-way replication
+rate is below the nominal count in 85 of 99 colon resamples and 91 of 99
+Rotterdam resamples, because it needs a dominator on the selection third
+that also clears the margin. The table now gives range, median and
+frequency, and Table S1e's note says that sizing the inner Monte Carlo
+component at the nominal count therefore understates it slightly.
+
+New: analysis/check_outer.R, so the round-nine correction can be verified
+rather than taken on trust. It reads the four stored result objects and the
+analysis sources and prints, for each, the non-finite cell count, the rows
+stored against the nominal replicate count, the bootstrap resamples behind
+each range, and the usable inner-split counts; it computes the Monte Carlo
+term both ways; and it exits non-zero on failure. The round-nine admission
+takes the reviewer's phrasing: we inferred the cause incorrectly without
+inspecting the stored result object, and the subsequent audit showed that
+no outer replicate failed or was discarded.
+
+Found by our own audit of this redraft:
+
+- The first draft of check_outer.R printed two of its four statements as
+  fixed text: that row one is the observed-data evaluation, and which line
+  of the export sets the Monte Carlo denominator. It also never checked
+  "nothing discarded" at all — B_OUT is stored after any drop, so a run
+  that lost two replicates would have printed a smaller count and still
+  passed. It now parses the nominal count out of the analysis script,
+  compares it with the rows stored, and locates and prints the two source
+  lines instead of describing them.
+- The seventh export check was inside an "if the objects exist" guard, so a
+  missing or older result object would have skipped it silently while the
+  Methods claimed it stops the build. It is unconditional.
+- Two attributions of the width to patients alone survived the first pass,
+  one of them in the abstract; the letter's "Where" line pointed at a
+  section that had not been touched.
+- A stated width contradicted the endpoints printed beside it, because the
+  width was computed from unrounded endpoints and the endpoints printed to
+  two decimals.
+- A helper returning a minimum and a maximum was read as "colon and
+  Rotterdam" in two sentences that followed a colon/Rotterdam enumeration.
+- Figure 2's caption said the ranges span more than half the unit interval;
+  that is true of the effect-estimate promise and not of the eligibility
+  promise plotted in the same panel.
+- Text S1.6 described the primary-versus-nested agreement check as a Monte
+  Carlo calculation; it is a fixed tolerance, and the note now says so and
+  points at the observed gaps.
+
+Author names, affiliations, funding, competing interests, the contribution
+statement and the repository URL remain placeholders.

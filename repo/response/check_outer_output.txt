@@ -1,0 +1,50 @@
+
+analysis/out/nested_colon.rds
+  rows stored 150; nominal replicate count in analysis/nested_all.R: 150
+  no replicate was discarded: every attempted replicate is stored
+  non-finite cells in the result matrix: 0   (no replicate failed)
+  the first row is the observed-data evaluation, so 149 bootstrap resamples form the ranges
+  usable inner splits (bootstrap resamples only): smallest 22 of 25; statistics always at the nominal count 27 of 30; statistics undefined in a whole resample 0
+    rank_hr_0.02     min 22  median 25  max 25  resamples below nominal  12 of 149
+    rank_rm_0.02     min 22  median 25  max 25  resamples below nominal  12 of 149
+    skew_0.02        min 22  median 25  max 25  resamples below nominal  12 of 149
+
+analysis/out/nested_rott.rds
+  rows stored 150; nominal replicate count in analysis/nested_all.R: 150
+  no replicate was discarded: every attempted replicate is stored
+  non-finite cells in the result matrix: 0   (no replicate failed)
+  the first row is the observed-data evaluation, so 149 bootstrap resamples form the ranges
+  usable inner splits (bootstrap resamples only): smallest 25 of 25; statistics always at the nominal count 30 of 30; statistics undefined in a whole resample 0
+
+analysis/out/threeway_nested_colon.rds
+  rows stored 100; nominal replicate count in analysis/threeway_nested.R: 100
+  no replicate was discarded: every attempted replicate is stored
+  non-finite cells in the result matrix: 0   (no replicate failed)
+  the first row is the observed-data evaluation, so 99 bootstrap resamples form the ranges
+  usable inner splits (bootstrap resamples only): smallest 18 of 25; statistics always at the nominal count 6 of 9; statistics undefined in a whole resample 0
+    repro            min 21  median 24  max 25  resamples below nominal  57 of  99
+    reproM           min 18  median 23  max 25  resamples below nominal  85 of  99
+    best_holds       min 21  median 24  max 25  resamples below nominal  57 of  99
+
+analysis/out/threeway_nested_rott.rds
+  rows stored 100; nominal replicate count in analysis/threeway_nested.R: 100
+  no replicate was discarded: every attempted replicate is stored
+  non-finite cells in the result matrix: 0   (no replicate failed)
+  the first row is the observed-data evaluation, so 99 bootstrap resamples form the ranges
+  usable inner splits (bootstrap resamples only): smallest 16 of 25; statistics always at the nominal count 6 of 9; statistics undefined in a whole resample 0
+    repro            min 19  median 24  max 25  resamples below nominal  68 of  99
+    reproM           min 16  median 23  max 25  resamples below nominal  91 of  99
+    best_holds       min 19  median 24  max 25  resamples below nominal  68 of  99
+
+The source lines behind the statements above:
+   analysis/nested_all.R:110: db <- if (b == 1L) dat else dat[sample(n, n, replace = TRUE), , drop = FALSE] 
+   analysis/threeway_nested.R:77: db <- if (b == 1L) dat else dat[sample(n, n, replace = TRUE), , drop = FALSE] 
+   analysis/nested_all.R:134: vmc <- function(nm) { u <- Vb[, nm] / pmax(Kb[, nm], 1); mean(u[is.finite(u)]) } 
+   analysis/export_numbers.R:280: u <- Vb[, nm] / pmax(Kb[, nm], 1); mean(u[is.finite(u)]) 
+  self-test, searching for a line that cannot be there: detected: yes
+
+Monte Carlo term for rank_hr_0.02 in analysis/out/nested_colon.rds
+  dividing by each resample's own usable count: 0.003247
+  dividing by the nominal count:                0.003230
+
+ALL CHECKS PASSED

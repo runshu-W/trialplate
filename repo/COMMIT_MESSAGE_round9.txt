@@ -1,0 +1,80 @@
+Ninth revision: stop using the ranges for implicit null-hypothesis
+inference, separate the observed range from the heuristic one, and
+withdraw an explanation we invented rather than checked
+
+The Methods had said that no conclusion turns on whether a range covers
+one half or zero, and then three sentences did exactly that: the matched
+comparison's ranges "straddle one half, which is the substance of what
+these cohorts can say", the paired rule differences "lie on both sides of
+zero", and the Conclusions used the second as part of its reason for
+claiming neither advantage nor equivalence. All three are gone. What
+replaces them is the width of the range, computed from the result file
+rather than described in words, plus an explicit statement that no
+calibrated population-level comparison was performed. The equivalence
+claim now rests only on the fact that no margin was prespecified and no
+equivalence test was run.
+
+The observed and the variance-adjusted ranges are no longer joined by a
+slash under one heading. Tables S3 and S3c carry five columns: the
+quantity, then for each cohort the point estimate with the OBSERVED
+PATIENT-RESAMPLED RANGE beneath it, and the VARIANCE-ADJUSTED SENSITIVITY
+RANGE in a column of its own. The notes say which is an empirical quantile
+of the resampled statistic and which is a heuristic transformation of
+unknown quantile accuracy, and that the main text quotes the first and
+never the second. Table S1e, which the S3 note points at, now uses the
+same two names instead of a third.
+
+On the counts: there were no failed replicates to explain. Every row of
+all four nested result objects is finite. The first outer replicate uses
+the unresampled cohort (b == 1) and is held out of the bootstrap
+distribution as the observed-data replicate whose disagreement with the
+repeated-split estimate Table S3c reports, so B - 1 resamples form each
+range. The eighth revision noticed the mismatch between 150 and 149,
+assumed a failure and wrote that a replicate had been dropped where the
+split procedure failed. That was not checked and was untrue. The Methods
+and both table notes now give the real reason and say the earlier
+statement was wrong.
+
+Wording: "separates algorithmic stability from population uncertainty"
+becomes an attempted approximate decomposition, with the note that for
+some quantities the patient-level component is not identifiable at this
+Monte Carlo precision. The Discussion sentence on information currencies
+is split in two so the withdrawal attaches only to the earlier
+threshold-conditioned comparison, and "robustly" is replaced by "not
+driven by any single scenario" there, in Table S2c and in the Results.
+
+Typos: the abstract's stray punctuation after "equal weight"; and the
+Table S2c bin-edge header, which printed 71 for 710 because the
+significant-figure routine added in the last revision stripped trailing
+zeros from the formatted string. That would have corrupted any edge ending
+in zero, so it is fixed at the source rather than in the one place it
+happened to show.
+
+Found by our own audit of this redraft:
+
+- The abstract said the paired difference was "about as sensitive to
+  cohort composition as the marginal figures". It is not: the paired
+  central ranges are 0.24 to 0.36 wide against 0.52 to 0.60 for the
+  marginal ones, and the sentence deleted the only justification the paper
+  gives for pairing.
+- "About a third of the unit interval" was attached to ranges of width
+  0.26 to 0.32, and "about a quarter of a unit" to paired ranges as wide
+  as 0.36. Every such phrase is now an interpolated number.
+- Results said the 2.5 and 97.5 points rest on the third replicate at 150
+  resamples; at 149 they rest on the fourth, as the Methods already said.
+- Table S1e claimed the observed-to-implied spread ratio ran from about
+  0.7 to 1.0 in the well-determined columns and 0.6 to 2.5 overall; the
+  table's own cells give 0.59 to 1.14 and 0.41 to 2.45. Both are now
+  computed from the result file.
+- Table S2c named one scenario whose omission reverses the sign of the
+  events-minus-patients difference; three do.
+- Figure 2's panel title still read "One promise is robust", and its
+  subtitle still said "outer-bootstrap intervals". Both regenerated.
+- Several smaller repairs: a dangling "neither of which" clause left by an
+  earlier rewrite, a present/past tense break in the abstract and
+  Conclusions, a singular antecedent taking a plural pronoun, and the
+  Results describing a leave-one-out sweep as ruling out "one or two"
+  scenarios when it drops one at a time.
+
+Author names, affiliations, funding, competing interests, the contribution
+statement and the repository URL remain placeholders.

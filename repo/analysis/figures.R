@@ -74,8 +74,8 @@ legend("bottomright", bty = "n", cex = .72,
   col = c(OI["green"], OI["vermilion"], OI["blue"], OI["purple"]),
   pt.bg = c(OI["green"], OI["vermilion"], OI["blue"], OI["purple"]),
   pch = c(21, 22, 23, 25), lty = c(1, 2, NA, NA), lwd = 2)
-mtext("One promise is robust; the other has a threshold in THIS mechanism", 3, line = 1.3, cex = .80, font = 2)
-mtext("simulated points: Monte Carlo intervals. observed cohorts: outer-bootstrap intervals", 3, line = .25, cex = .58, col = GREY)
+mtext("One promise is kept at every fitting size; the other has a threshold in THIS mechanism", 3, line = 1.3, cex = .80, font = 2)
+mtext("simulated points: Monte Carlo intervals. observed cohorts: patient-resampled ranges", 3, line = .25, cex = .58, col = GREY)
 
 plot(n, px, log = "x", type = "n", ylim = c(0, max(px)*1.15), axes = FALSE,
      xlab = "patients available to FIT the rule (log scale)", ylab = "P(exactly the right criterion set)")

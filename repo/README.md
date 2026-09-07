@@ -22,10 +22,14 @@ had no part in choosing it. Scoring set fixed at 100 000; 300 replicates per row
 Enrolling more patients does not require the rule to select the right criteria —
 relaxing almost any criterion admits more people — so that promise survives a mostly
 wrong selection. Improving the effect estimate does require it, and so has a
-threshold. Confounded assignment that is *correctly adjusted for* roughly doubles the
-requirement. Confounded assignment with a confounder left **unmeasured** returns the
-curve to randomised levels while inflating the gap being detected by 32%, so apparent
-success on real-world data is not evidence that adjustment was adequate.
+threshold. Confounded assignment that is *correctly adjusted for* raises the requirement by a
+factor that depends on the reliability asked for: the randomised arm reaches 0.80 at
+3000 fitting patients and the adjusted arm at about 5167, a factor of about 1.7, while
+the randomised arm's 0.937 at 5167 is not reached by the adjusted arm anywhere in the
+simulated range. Confounded assignment with a confounder left **unmeasured** returns
+the curve to randomised levels (0.936 against 0.937 at 5167) while inflating the
+estimand being detected by 8.6% and cutting correct selection from 0.280 to 0.116, so
+apparent success on real-world data is not evidence that adjustment was adequate.
 
 ## Install
 
@@ -123,11 +127,14 @@ L(i,j) = 1 − p(ij)/p(i) − p(ij)/p(j) + p(ij)
 ```
 
 computable from eligibility rates alone. It collapses as criteria become permissive:
-two independent criteria each retaining 85% of a cohort have leverage 0.022, against
-0.303 for two retaining 45%. Real protocol criteria are permissive, so a pairwise
-interaction analysis on them is structurally uninformative *independently of sample
-size* — and you can know that before you start. **A null interaction is therefore not
-evidence that no effect modification exists.**
+two independent criteria each retaining 85% of a cohort have leverage 0.0225, against
+0.3025 for two retaining 45%. Real protocol criteria are permissive, so a pairwise
+interaction analysis on them is heavily attenuated — and you can know that before you
+start. The attenuation is by a *known factor*, not a structural invisibility: the
+signal still depends on the effect size and the sample size, and a large enough study
+can recover it. The one case that is uninformative at any sample size is a logical
+implication between two criteria, where the interaction is an arithmetic identity.
+**A null interaction is therefore not evidence that no effect modification exists.**
 
 **Logical implication.** If criterion *i* implies criterion *j*, then
 v(S ∪ {i,j}) = v(S ∪ {i}) for every S, so the pair's interaction cell is an
@@ -144,12 +151,22 @@ excluded from the test family and hatched in the plot.
   relying on the comparison.
 - The leverage expression is derived for the "both criteria required" structure.
   Other interaction forms have different coefficients.
-- Interval coverage was validated at n = 1500 with B = 200 and K = 25: 0.942 for a
-  null interaction, 0.908 for a non-null one. Use B ≥ 1000 and K ≥ 50 in application
-  and treat intervals for large interactions as mildly anticonservative.
-- Every observed-cohort point estimate in the paper comes from `analysis/primary.R`
-  and is written to one result file that the manuscript reads at build time; the
-  nested bootstrap supplies uncertainty only. `analysis/export_numbers.R` refuses to
+- Interval coverage of the bias-corrected and accelerated bootstrap was checked
+  against known truth over 420 replicates: 0.950 for a null interaction, 0.933 for a
+  planted one (Monte Carlo standard errors 0.011 and 0.012). Treat intervals for
+  large interactions as mildly anticonservative. This applies to the BCa intervals on
+  interactions and Shapley values only — the out-of-sample quantities carry
+  patient-resampled *ranges*, which are not confidence intervals and whose coverage
+  has not been evaluated at all; see the Methods of the manuscript.
+- The observed-cohort point estimates the paper's claims rest on come from
+  `analysis/primary.R` and are written to one result file that the manuscript reads at
+  build time; the nested bootstrap supplies spread only, never a point estimate. Other
+  tables come from their own scripts, named in each caption.
+- `analysis/check_outer.R` verifies, from the stored result objects and the analysis
+  sources alone, that no outer replicate failed or was discarded, that the first
+  replicate of each nested run is the observed cohort rather than a resample, and the
+  usable inner-split counts behind Supplementary Table S1g. It exits non-zero on
+  failure and runs in under a second. `analysis/export_numbers.R` refuses to
   export if the Rotterdam endpoint, either horizon, or the agreement between the two
   estimates of a quantity is wrong, or if any analysis script pairs the relapse-free
   time with the death indicator. This guard exists because eleven scripts did exactly

@@ -246,6 +246,94 @@ Terminology, enforced in the prose rather than the code: these quantities are
 **patient-resampled ranges**, never intervals. No claim in the paper turns on whether
 one of them covers 0.5, or 0, or any other value.
 
+### Added in the ninth revision
+
+No new analysis. The ninth review asked for consistency between what the paper says
+it does with the patient-resampled ranges and what it actually does with them.
+
+Three things worth recording for anyone reading the code.
+
+**There are no failed outer replicates.** `nested_all.R:110` and
+`threeway_nested.R:77` both run `db <- if (b == 1L) dat else dat[sample(n, n,
+replace = TRUE), , drop = FALSE]`, so the FIRST outer replicate is the observed
+cohort itself, not a resample. `export_numbers.R` then takes `point <- M[1, ]` and
+`boot <- M[-1, ]`, holding that row out of the range and using it only for the
+agreement check reported under Table S3c. That is the whole reason the ranges rest
+on `B - 1` resamples. Every row of all four result objects is finite; nothing was
+dropped. The eighth revision said a replicate had been discarded on failure, which
+was invented rather than checked, and is withdrawn.
+
+**Two different objects, two different names.** `ci80` is the OBSERVED
+patient-resampled range, an empirical quantile of the resampled statistic. `ci80_deflated`
+is the VARIANCE-ADJUSTED SENSITIVITY RANGE, a heuristic: the same replicates shrunk
+toward their mean by `sqrt((v_tot - v_mc)/v_tot)`. It matches a second moment and its
+quantile accuracy and coverage are unknown. Tables S3 and S3c now give them separate
+columns rather than joining them with a slash, and the manuscript quotes only the
+observed one.
+
+**Range widths are computed, not described.** Phrases like "about a third of the unit
+interval" were prose approximations that the provenance check cannot see, and several
+were wrong by a quarter of their value. The manuscript now interpolates the widths
+from `ci80`, so they cannot drift again.
+
+### Added in the tenth revision
+
+| file | what it does |
+|---|---|
+| `check_outer.R` | reads the four nested result objects and the analysis sources and CHECKS, rather than asserts, the claims the paper makes about them: that no replicate failed (no non-finite cell) and none was discarded (rows stored against the nominal count parsed out of `nested_all.R` / `threeway_nested.R`, since `B_OUT` is stored after any drop and would otherwise hide one), that the first row is the observed-data evaluation, and the usable inner-split counts behind Table S1g. It prints the source lines that decide the observed-data replicate and the Monte Carlo denominator instead of describing them, and exits non-zero on failure. Runs from the repository root in under a second. |
+
+`export_numbers.R` gained `J$usable`: per design and cohort, the usable inner-split
+count for every column of the result matrix — minimum, median, maximum, and how many
+resamples fall below the nominal count. The seventh export check asserts, over all
+four objects and unconditionally, that no statistic is undefined in a whole resample.
+
+Two facts about the inner splits that were true in the code and absent from the paper
+until this revision, and are now in the Methods and Table S1g:
+
+- a resample's value for a statistic is the mean over the splits that DEFINE it
+  (`colMeans(A, na.rm = TRUE)`), not over the nominal count;
+- the inner Monte Carlo term divides by that resample's own usable count,
+  `Vb[, nm] / pmax(Kb[, nm], 1)`, never by the nominal 25.
+
+Frequency matters as much as depth here and the first draft of Table S1g reported only
+the minimum and the median, which made the shortfall look occasional. It is not: the
+margin-constrained three-way replication rate is below the nominal count in 85 of 99
+colon resamples and 91 of 99 Rotterdam resamples, because it needs a dominator on the
+selection third that also clears the margin.
+
+Terminology, continued from the ninth revision: the observed range measures the
+COMBINED patient-resampling and finite-split procedure. Its width is not attributable
+to cohort composition; where the paper attributes anything to patient sampling it
+points at the identifiable `sd_outer`, not at the total width.
+
+### Added in the eleventh revision
+
+`check_outer.R` had the defect it exists to catch. It gathered its expected source
+lines with `c()`, which drops `NULL`, so a line that could not be found disappeared
+from the sequence and the `else` branch that sets the failure flag was unreachable —
+the script would report a pass having checked one thing fewer. It now uses `list()`,
+names each missing check, and runs a deliberate negative test (a search for a line
+that cannot exist) so the failure path is exercised every time. If you change any of
+the four lines it looks for, the script will tell you and exit non-zero.
+
+The four result objects it reads are now shipped with the update package. They are
+94 kB in total, so there is no reason for a reader to have to rerun the bootstrap to
+check the claims made about them.
+
+On the three-way estimands, from `threeway_nested.R:59-69`, since the denominators
+differ and the paper now says so:
+
+- `repro`, `best_holds` — `NA` unless the selection third produced at least one
+  dominator (`nB > 0`);
+- `reproM` — `NA` unless at least one dominator also clears the margin (`sum(dBM) > 0`),
+  a strictly smaller condition, hence the lowest usable counts in Table S1g;
+- `front_conf` — defined in every split; `nB == 0` is recorded as 1, the rule being
+  undominated by construction when nothing dominated it;
+- `front_sel`, `front_test` — defined in every split.
+
+Do not "fix" the differing denominators by recoding undefined replication rates to
+zero. The estimands are conditional and the conditioning is the point.
+
 `sim_dgp.R` holds the generating process for the planted-interaction simulations.
 Its header records why the first version of that design planted no detectable
 signal — the reason turned into the interaction-leverage result, so it is kept.

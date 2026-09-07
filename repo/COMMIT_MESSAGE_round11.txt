@@ -1,0 +1,63 @@
+Eleventh revision: repair the audit script's own failure branch, ship the
+result objects it reads, and state that the three-way quantities do not
+share a denominator
+
+Four points, all closable, and two of them were defects in the verification
+apparatus rather than in the analysis.
+
+The audit script had the fault it exists to catch. analysis/check_outer.R
+collected its expected source lines with c(), and c() drops NULL, so a line
+that could not be found vanished from the sequence and the branch setting
+the failure flag could never execute: the script would print ALL CHECKS
+PASSED having silently performed one check fewer. It now collects them with
+list(), names each missing check in the output, and carries a deliberate
+negative test — a search for a line that cannot exist — so the failure
+branch runs on every invocation. Verified by mutating one of the four target
+lines in a scratch copy: the script names the missing check and exits 1, and
+the source was restored unchanged.
+
+The four result objects the script reads were not in the update package.
+The exclusion that keeps the large intermediate objects out of the archive
+was matching them too, so the audit we described could not be run from what
+we shipped. nested_colon.rds, nested_rott.rds, threeway_nested_colon.rds and
+threeway_nested_rott.rds total 94 kB and are now included, with the script's
+output as response/check_outer_output.txt. Extracting the archive into an
+empty directory and running Rscript analysis/check_outer.R from its root
+reproduces that output byte for byte.
+
+The three-way quantities do not share a conditional denominator, and the
+summary did not say so. The replication rate and the lowest-hazard-ratio
+carry-over are defined only in splits where the selection third produced a
+dominator; the margin-constrained replication rate only where a dominator
+also clears the margin, a strictly smaller set, which is why its usable
+counts are lowest; frontier membership is defined in every split, a split
+with no dominator leaving the rule undominated by construction and recorded
+as such rather than dropped. The Results now say "among splits with at least
+one selection-stage dominator" where the first two are first reported, and
+say explicitly that the third is not conditioned that way. Tables S1g and
+S3c carry the same distinction. Nothing was recoded: the estimands are what
+they were, and are now described accurately.
+
+Also taken: "short in 85 of 99" counts resamples in which at least one inner
+split failed to define the statistic, not splits. The table now says so
+beside the median, which is 23 of the nominal 25 for every affected
+quantity.
+
+The paired-versus-marginal width comparison named a lower bound that held
+only for the published rule, while the same paragraph reported the RMST
+rule's marginal range at 0.40 wide. It now compares the four paired ranges
+against all eight marginal figures the two rules contribute, so the bound is
+0.40.
+
+The repository README carried three claims the manuscript has since
+withdrawn or corrected: the confounding inflation as 32% where it is 8.6%;
+interval coverage from a 200-replicate run where the current figures come
+from 420; and low interaction leverage described as structural
+uninformativeness independent of sample size, where it is attenuation by a
+known factor and logical implication is the only genuinely uninformative
+case. It also claimed a single script supplies every observed-cohort point
+estimate, which the eighth revision scoped. All synchronised, and the README
+now points at check_outer.R.
+
+Author names, affiliations, funding, competing interests, the contribution
+statement and the repository URL remain placeholders.

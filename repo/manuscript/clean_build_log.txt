@@ -1,16 +1,16 @@
 Clean rebuild of every document from the exported result file
-2026-09-01 04:13:14 UTC
+2026-09-07 07:59:58 UTC
 
 $ node check_numbers.js
-number provenance check passed over 7 live sources; 40 structural constants whitelisted; 7 earlier response letters exempt as historical record
+number provenance check passed over 7 live sources; 40 structural constants whitelisted; 9 earlier response letters exempt as historical record
 
 $ node build.js                      # manuscript
-number provenance check passed over 7 live sources; 40 structural constants whitelisted; 7 earlier response letters exempt as historical record
-written 797717 bytes; 22 of 22 references cited
+number provenance check passed over 7 live sources; 40 structural constants whitelisted; 9 earlier response letters exempt as historical record
+written 800986 bytes; 22 of 22 references cited
 
 $ node supp.js                       # supplement
-number provenance check passed over 7 live sources; 40 structural constants whitelisted; 7 earlier response letters exempt as historical record
-supplement written 499750 bytes
+number provenance check passed over 7 live sources; 40 structural constants whitelisted; 9 earlier response letters exempt as historical record
+supplement written 503924 bytes
 
 $ node response.js
 written 17257 bytes
@@ -19,50 +19,62 @@ $ node response2.js
 written 15011 bytes
 
 $ node response3.js
-written 13775 bytes
+written 13774 bytes
 
 $ node response4.js
-written 14473 bytes
+written 14472 bytes
 
 $ node response5.js
-written 13523 bytes
+written 13520 bytes
 
 $ node response6.js
-written 12860 bytes
+written 12862 bytes
 
 $ node response7.js
-number provenance check passed over 7 live sources; 40 structural constants whitelisted; 7 earlier response letters exempt as historical record
-written 14145 bytes
+number provenance check passed over 7 live sources; 40 structural constants whitelisted; 9 earlier response letters exempt as historical record
+written 14144 bytes
 
 $ node response8.js
-number provenance check passed over 7 live sources; 40 structural constants whitelisted; 7 earlier response letters exempt as historical record
-written 13917 bytes
+number provenance check passed over 7 live sources; 40 structural constants whitelisted; 9 earlier response letters exempt as historical record
+written 13914 bytes
+
+$ node response9.js
+number provenance check passed over 7 live sources; 40 structural constants whitelisted; 9 earlier response letters exempt as historical record
+written 11881 bytes
+
+$ node response10.js
+number provenance check passed over 7 live sources; 40 structural constants whitelisted; 9 earlier response letters exempt as historical record
+written 12881 bytes
 
 $ node /home/claude/cn/make_cn.js    # Chinese explainer
-written 19740 bytes
+written 19787 bytes
 
 Files written:
-  19740  2026-09-01T04:13:17Z  /home/claude/cn/文章解读_中文.docx
-  17257  2026-09-01T04:13:15Z  response_to_reviewer.docx
-  15011  2026-09-01T04:13:16Z  response_to_reviewer_round2.docx
-  13775  2026-09-01T04:13:16Z  response_to_reviewer_round3.docx
-  14473  2026-09-01T04:13:16Z  response_to_reviewer_round4.docx
-  13523  2026-09-01T04:13:16Z  response_to_reviewer_round5.docx
-  12860  2026-09-01T04:13:16Z  response_to_reviewer_round6.docx
-  14145  2026-09-01T04:13:16Z  response_to_reviewer_round7.docx
-  13917  2026-09-01T04:13:17Z  response_to_reviewer_round8.docx
-  499750  2026-09-01T04:13:15Z  supplement.docx
-  797717  2026-09-01T04:13:15Z  trialplate_manuscript.docx
+  19787  2026-09-07T08:00:02Z  /home/claude/cn/文章解读_中文.docx
+  17257  2026-09-07T08:00:00Z  response_to_reviewer.docx
+  12881  2026-09-07T08:00:02Z  response_to_reviewer_round10.docx
+  15011  2026-09-07T08:00:00Z  response_to_reviewer_round2.docx
+  13774  2026-09-07T08:00:00Z  response_to_reviewer_round3.docx
+  14472  2026-09-07T08:00:01Z  response_to_reviewer_round4.docx
+  13520  2026-09-07T08:00:01Z  response_to_reviewer_round5.docx
+  12862  2026-09-07T08:00:01Z  response_to_reviewer_round6.docx
+  14144  2026-09-07T08:00:01Z  response_to_reviewer_round7.docx
+  13914  2026-09-07T08:00:01Z  response_to_reviewer_round8.docx
+  11881  2026-09-07T08:00:02Z  response_to_reviewer_round9.docx
+  503924  2026-09-07T08:00:00Z  supplement.docx
+  800986  2026-09-07T07:59:59Z  trialplate_manuscript.docx
 
 SHA-256 of the shipped documents:
-0288c11b7996c25d3d4755824fa3aa70e2b2826473541d7e5a756312c3d04c7d  trialplate_manuscript.docx
-3364990d3b01c55279ceca253c3082ed43ef423e0e75876a2bfb43d53a27f97a  supplement.docx
-249d02b1cab9326f0747b4f9328e4b88fdcdd5d109916f07dd4178f2e55d09f6  response_to_reviewer.docx
-392a22bc6847ec83221f0ad26a33fcb457713308e87d23759a3f81255d573928  response_to_reviewer_round2.docx
-aefa69ffb34ceb087051c18a261fcae87ac330353be6953228b6004489e8cafb  response_to_reviewer_round3.docx
-87a5593cb8ffe444ba363a3875bdd09f325add801ae41e7b1f01189ab682ea3d  response_to_reviewer_round4.docx
-eb73665b252324118dbef7fc239b92f5577251b2e14e8997fca7ee953b7956f0  response_to_reviewer_round5.docx
-0dfbd2c551ef19590c668239b557b4a89e7225ced59eb35cfd4e3e052069e3c1  response_to_reviewer_round6.docx
-67a0fa61b6348b816093c45327150a082eaaf1a838d000c5d21098bb1d0cb625  response_to_reviewer_round7.docx
-d19166daa7e5009accdc1350d3d653946a5f951cbac7804135418f34155911aa  response_to_reviewer_round8.docx
-137a70f2948f6ea41dc6dc1f9873c005f2408e9795a54c82348351d28cac55b4  文章解读_中文.docx
+353b76557c837ee3eb8b4c685b4e85a6b3226de785da9ac28dbc6c227802ab77  trialplate_manuscript.docx
+ab0594dbcee8e09164432f7e789c6237f9be5a7264791544fc48dbece34aa6a5  supplement.docx
+cfd0e61f224d7dc054c17ef2adcc3e5e15a09361a3240be769c99ce6e909aab1  response_to_reviewer.docx
+9331f6694077f8ddb9273283892e37d432b612afac372a16b2347b5cbc3bc9da  response_to_reviewer_round10.docx
+10bb8b28c1a02bc2d106f742a9de57ccbc19c4da47a68477b8ebaefe8071f204  response_to_reviewer_round2.docx
+5bbec58b7429c273a1620c88e7c2b4eda726a75110915edc31f340f64949ba6b  response_to_reviewer_round3.docx
+6b66eb594e264a87c8b0741291199323fe4dac4abca20da99a28f15b46744fad  response_to_reviewer_round4.docx
+dbfa18678b3c91c943adab979305409df72c0855984e4e80bad0719c6005dc2a  response_to_reviewer_round5.docx
+5fd328f340910ac48af39ef33c9a0f885bce51b59fa590508c91913ffc79fa35  response_to_reviewer_round6.docx
+6a6d6187a2458adbac597072cc1a160ad5f04f48415fa6e446f2ffdf809e22c7  response_to_reviewer_round7.docx
+3a796aba86b8b24ea5cf5ff6079343862a9b7389b06f8c4fef12ae5b8736c1f4  response_to_reviewer_round8.docx
+9a421ea4588f5f50705ddccd8aa2dd510cba4a175b62d5ca4cae06862dd6a50f  response_to_reviewer_round9.docx
+65418d98ef3d62e32915065fd622309dcffe93170c3348e844cc3f162cdabd5b  文章解读_中文.docx

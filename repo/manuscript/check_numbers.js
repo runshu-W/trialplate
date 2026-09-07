@@ -68,7 +68,7 @@ const ALLOWED = new Map(Object.entries({
 /* Live document sources: the manuscript, the supplement, and the response letter
  * for the current round. These must contain no transcribed figure. */
 const FILES = ["make.js", "part2.js", "part3.js", "supp.js", "build.js", "refs.js",
-               "response8.js"];
+               "response10.js"];
 
 /* Earlier response letters are a historical record of what was claimed at the time,
  * including claims later corrected. Rewriting them to read from today's result file
@@ -76,7 +76,7 @@ const FILES = ["make.js", "part2.js", "part3.js", "supp.js", "build.js", "refs.j
  * scanned. They are listed here so the exemption is visible rather than silent, and
  * the check reports it on every run. */
 const HISTORICAL = ["response.js", "response2.js", "response3.js", "response4.js",
-                    "response5.js", "response6.js", "response7.js"];
+                    "response5.js", "response6.js", "response7.js", "response8.js", "response9.js"];
 
 /* A response letter has to be able to quote the wrong value it is correcting.
  * Those quotations are listed here explicitly rather than being exempted by a
